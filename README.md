@@ -4,6 +4,14 @@ Windows desktop app (WPF, .NET 10) to switch DNS providers, benchmark resolvers,
 
 > Status: **v1.0.0, all 8 phases complete.** Installer (MSI) and portable zip are built by `scripts/build-release.ps1`. See [Installation](docs/INSTALLATION.md), [User guide](docs/USER_GUIDE.md), [Security](docs/SECURITY.md) and [Architecture](docs/ARCHITECTURE.md).
 
+
+## Screenshots
+
+| | |
+|---|---|
+| ![DNS Providers](docs/screenshots/providers.png) | ![DNS Benchmark](docs/screenshots/benchmark.png) |
+| ![Custom DNS](docs/screenshots/custom-dns.png) | ![About](docs/screenshots/about.png) |
+
 ## Build and run
 
 Requires Windows 10/11 and the .NET 10 SDK.
