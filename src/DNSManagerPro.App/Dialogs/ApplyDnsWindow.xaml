@@ -23,18 +23,23 @@
                                Text="Administrator rights are required: Windows only allows administrators to change DNS settings. 'Restart as administrator' shows the Windows prompt and reopens this review; nothing is changed until you apply again." />
                 </Border>
 
-                <TextBlock Text="ADAPTER" Style="{StaticResource CardTitle}" Margin="0,0,0,6" />
-                <ListBox ItemsSource="{Binding AdapterOptions}" SelectedItem="{Binding SelectedAdapter}" IsEnabled="{Binding CanEdit}" Background="Transparent" BorderThickness="0"
-                         ItemContainerStyle="{StaticResource CardListItemStyle}" MaxHeight="190">
-                    <ListBox.ItemTemplate>
+                <TextBlock Style="{StaticResource CardTitle}" Margin="0,0,0,6" Text="{Binding AllowMultiple, Converter={StaticResource BoolToTitle}}" />
+                <TextBlock Style="{StaticResource MutedText}" Margin="0,0,0,8" TextWrapping="Wrap" Visibility="{Binding AllowMultiple, Converter={StaticResource BoolToVisibility}}"
+                           Text="Only the adapters you tick are changed. Each one gets its own backup, verification and rollback." />
+                <ItemsControl ItemsSource="{Binding Choices}">
+                    <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <StackPanel>
-                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
-                                <TextBlock Style="{StaticResource MutedText}" Text="{Binding Description}" TextTrimming="CharacterEllipsis" />
-                            </StackPanel>
+                            <Border Background="{StaticResource CardBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="14,10" Margin="0,0,0,8">
+                                <CheckBox IsChecked="{Binding IsChecked}" IsEnabled="{Binding DataContext.CanEdit, RelativeSource={RelativeSource AncestorType=Window}}">
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Adapter.Name}" FontWeight="SemiBold" />
+                                        <TextBlock Style="{StaticResource MutedText}" Text="{Binding Adapter.Description}" TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                </CheckBox>
+                            </Border>
                         </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
 
                 <TextBlock Text="IPV4 DNS" Style="{StaticResource CardTitle}" Margin="0,14,0,6" />
                 <StackPanel Orientation="Horizontal">
@@ -49,14 +54,20 @@
                     <RadioButton GroupName="V6" Style="{StaticResource SegmentRadio}" Content="Automatic (DHCP)"  IsEnabled="{Binding CanEdit}" IsChecked="{Binding ChoiceV6, Converter={StaticResource EnumToBool}, ConverterParameter={x:Static d:FamilyChoice.Automatic}}" />
                 </StackPanel>
 
+                <CheckBox Margin="0,16,0,0" IsChecked="{Binding EnableDoh}" IsEnabled="{Binding CanEdit}" Visibility="{Binding ShowDohOption, Converter={StaticResource BoolToVisibility}}">
+                    <TextBlock Text="{Binding DohOptionText}" TextWrapping="Wrap" MaxWidth="560" />
+                </CheckBox>
+                <TextBlock Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="26,4,0,0" Visibility="{Binding ShowDohOption, Converter={StaticResource BoolToVisibility}}"
+                           Text="Optional. Registers the DoH address with Windows 11 (netsh dns add encryption) with automatic upgrade and plain-DNS fallback. DoT and DoQ cannot be configured in Windows." />
+
                 <TextBlock Text="PREVIEW" Style="{StaticResource CardTitle}" Margin="0,18,0,6" />
                 <Border Style="{StaticResource CardStyle}" Margin="0" Padding="16,14">
                     <ItemsControl ItemsSource="{Binding Preview}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <Grid Margin="0,0,0,10">
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="80" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                                    <TextBlock Text="{Binding Label}" Foreground="{StaticResource TextMutedBrush}" />
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="170" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding Label}" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,0,10,0" />
                                     <StackPanel Grid.Column="1">
                                         <TextBlock Text="{Binding Before}" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" TextDecorations="{x:Null}" />
                                         <TextBlock Text="{Binding After, StringFormat='-> {0}'}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,2,0,0">
@@ -98,4 +109,5 @@
         </ScrollViewer>
     </DockPanel>
 </Window>
+
 

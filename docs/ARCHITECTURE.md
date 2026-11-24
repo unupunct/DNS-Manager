@@ -47,3 +47,11 @@ etsh interface ipv4|ipv6 set|add dnsservers with an argument *list* (no shell) b
 - **Persistence** (migration v3): `BenchmarkRuns` + `BenchmarkResults` (raw samples, cascade delete). Warm-up queries are not stored.
 - **Export**: RFC 4180 CSV with spreadsheet-formula neutralisation; JSON includes raw samples, summary, conclusion and a limitations statement.
 - **Charts** are small custom WPF controls (`FillBar`, `RangeBar`, `MultiLineChart`) instead of a charting dependency.
+
+## Phase 5 decisions
+
+- **Custom DNS vs Profiles**: both pages work on one store (`DnsProfile` in `DNSProfiles`, migration v4). *Custom DNS* is the editor, *DNS Profiles* is the gallery (apply / duplicate / export / import / filter). `ProfileService` is the single access point and raises `Changed` so both stay in sync; `PendingEditId` / `StartNew` hand intent from one page to the other.
+- **Automatic profiles**: `IsAutomatic` profiles carry no addresses and restore DHCP DNS through the normal review dialog.
+- **Import hardening** (`ProfileExchange`): format + version header, 1 MB and 500-profile caps, every entry validated with the same rules as the editor, provider ids and adapter ids dropped, fresh ids, name collisions get a numeric suffix. Never throws on bad input.
+- **Multi-adapter apply**: `ApplyDnsViewModel` builds one plan per ticked adapter and runs them sequentially through `DnsChangeService` (backup / verify / rollback per adapter). It stops at the first failure and reports which adapters keep the new settings. Only the preselected adapter is ticked by default.
+- **Encrypted DNS**: `IEncryptedDnsService` (`netsh dns add encryption` with an argument list) runs only after plain DNS was applied and verified, is opt-in, and its failure never rolls back working plain DNS. Search-domain suffix lists are intentionally not managed (global OS setting, out of scope).

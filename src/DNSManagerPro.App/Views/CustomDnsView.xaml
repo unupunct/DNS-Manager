@@ -1,0 +1,119 @@
+<UserControl x:Class="DNSManagerPro.App.Views.CustomDnsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Loaded="OnLoaded">
+    <UserControl.RenderTransform><TranslateTransform /></UserControl.RenderTransform>
+    <UserControl.Triggers>
+        <EventTrigger RoutedEvent="Loaded">
+            <BeginStoryboard>
+                <Storyboard>
+                    <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.3" />
+                    <DoubleAnimation Storyboard.TargetProperty="RenderTransform.(TranslateTransform.Y)" From="14" To="0" Duration="0:0:0.3" />
+                </Storyboard>
+            </BeginStoryboard>
+        </EventTrigger>
+    </UserControl.Triggers>
+    <Grid Margin="32,26,16,16">
+        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+        <Grid.ColumnDefinitions><ColumnDefinition Width="300" /><ColumnDefinition Width="20" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+
+        <StackPanel Grid.ColumnSpan="3" Margin="0,0,0,18">
+            <TextBlock Text="Custom DNS" Style="{StaticResource PageTitle}" />
+            <TextBlock Text="Build and validate your own DNS configurations, save them as profiles, and apply them to the adapters you choose." Style="{StaticResource MutedText}" Margin="0,2,0,0" />
+        </StackPanel>
+
+        <DockPanel Grid.Row="1">
+            <Button DockPanel.Dock="Top" Style="{StaticResource PrimaryButton}" Content="+  New configuration" Command="{Binding NewCommand}" Margin="0,0,0,12" />
+            <ListBox ItemsSource="{Binding List}" SelectedItem="{Binding SelectedItem}" Background="Transparent" BorderThickness="0"
+                     ItemContainerStyle="{StaticResource CardListItemStyle}" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel>
+                            <DockPanel>
+                                <Border DockPanel.Dock="Right" Style="{StaticResource BadgeBorder}" Margin="8,0,0,0"><TextBlock Text="{Binding Category}" FontSize="10.5" Foreground="{StaticResource AccentBrush}" /></Border>
+                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                            </DockPanel>
+                            <TextBlock Text="{Binding Summary}" Style="{StaticResource MutedText}" FontFamily="Consolas" TextTrimming="CharacterEllipsis" Margin="0,3,0,0" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </DockPanel>
+
+        <ScrollViewer Grid.Row="1" Grid.Column="2" VerticalScrollBarVisibility="Auto">
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,16,16" VerticalAlignment="Top">
+                <StackPanel>
+                    <TextBlock Text="{Binding EditorTitle}" FontSize="19" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding LastAppliedText}" Style="{StaticResource MutedText}" Margin="0,2,0,14" />
+
+                    <StackPanel Margin="0,0,0,12"><TextBlock Text="Name" Style="{StaticResource MutedText}" Margin="0,0,0,4" /><TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"  /></StackPanel>
+                    <StackPanel Margin="0,0,0,12"><TextBlock Text="Description" Style="{StaticResource MutedText}" Margin="0,0,0,4" /><TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}"  /></StackPanel>
+                    <TextBlock Text="Category" Style="{StaticResource MutedText}" Margin="0,0,0,4" />
+                    <ItemsControl ItemsSource="{Binding CategoryOptions}" Margin="0,0,0,14">
+                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate><DataTemplate><RadioButton GroupName="cat" Style="{StaticResource SegmentRadio}" Content="{Binding Label}" IsChecked="{Binding IsSelected, Mode=TwoWay}" /></DataTemplate></ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <TextBlock Text="START FROM A PROVIDER (copies its addresses, you can edit them)" Style="{StaticResource CardTitle}" Margin="0,6,0,6" />
+                    <ItemsControl ItemsSource="{Binding StarterProviders}" Margin="0,0,0,10">
+                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Style="{StaticResource GhostButton}" Content="{Binding Name}" Padding="10,4" FontSize="12" Margin="0,0,6,6"
+                                        Command="{Binding DataContext.StartFromCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <CheckBox Content="Use automatic DNS (DHCP) - restores the servers your router provides" IsChecked="{Binding IsAutomatic}" Margin="0,6,0,14" />
+
+                    <TextBlock Text="TRADITIONAL DNS SERVERS (IP addresses applied to the adapter)" Style="{StaticResource CardTitle}" />
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="12" /><ColumnDefinition /></Grid.ColumnDefinitions>
+                        <StackPanel><StackPanel Margin="0,0,0,12"><TextBlock Text="IPv4 primary" Style="{StaticResource MutedText}" Margin="0,0,0,4" /><TextBox Text="{Binding Ipv4Primary, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding AddressesEnabled}" /></StackPanel><StackPanel Margin="0,0,0,12"><TextBlock Text="IPv4 secondary" Style="{StaticResource MutedText}" Margin="0,0,0,4" /><TextBox Text="{Binding Ipv4Secondary, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding AddressesEnabled}" /></StackPanel></StackPanel>
+                        <StackPanel Grid.Column="2"><StackPanel Margin="0,0,0,12"><TextBlock Text="IPv6 primary" Style="{StaticResource MutedText}" Margin="0,0,0,4" /><TextBox Text="{Binding Ipv6Primary, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding AddressesEnabled}" /></StackPanel><StackPanel Margin="0,0,0,12"><TextBlock Text="IPv6 secondary" Style="{StaticResource MutedText}" Margin="0,0,0,4" /><TextBox Text="{Binding Ipv6Secondary, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding AddressesEnabled}" /></StackPanel></StackPanel>
+                    </Grid>
+
+                    <TextBlock Text="ENCRYPTED DNS ENDPOINTS (separate from the IP addresses above)" Style="{StaticResource CardTitle}" Margin="0,6,0,4" />
+                    <TextBlock Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,0,0,10"
+                               Text="Setting server IP addresses does not turn on encryption. On Windows 11 the DoH address can be registered for your servers when you apply (optional step in the apply dialog). Windows has no setting for DoT or DoQ; those endpoints are stored for reference only." />
+                    <StackPanel Margin="0,0,0,12"><TextBlock Text="DoH URL (https://...)" Style="{StaticResource MutedText}" Margin="0,0,0,4" /><TextBox Text="{Binding DohUrl, UpdateSourceTrigger=PropertyChanged}"  /></StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="12" /><ColumnDefinition /></Grid.ColumnDefinitions>
+                        <StackPanel><StackPanel Margin="0,0,0,12"><TextBlock Text="DoT host" Style="{StaticResource MutedText}" Margin="0,0,0,4" /><TextBox Text="{Binding DotHost, UpdateSourceTrigger=PropertyChanged}"  /></StackPanel></StackPanel>
+                        <StackPanel Grid.Column="2"><StackPanel Margin="0,0,0,12"><TextBlock Text="DoQ host" Style="{StaticResource MutedText}" Margin="0,0,0,4" /><TextBox Text="{Binding DoqHost, UpdateSourceTrigger=PropertyChanged}"  /></StackPanel></StackPanel>
+                    </Grid>
+
+                    <TextBlock Text="ADAPTER" Style="{StaticResource CardTitle}" Margin="0,6,0,6" />
+                    <ItemsControl ItemsSource="{Binding AdapterOptions}" Margin="0,0,0,14">
+                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate><DataTemplate><RadioButton GroupName="adapter" Style="{StaticResource SegmentRadio}" Content="{Binding Label}" IsChecked="{Binding IsSelected, Mode=TwoWay}" /></DataTemplate></ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <StackPanel Margin="0,0,0,12"><TextBlock Text="Tags (comma separated)" Style="{StaticResource MutedText}" Margin="0,0,0,4" /><TextBox Text="{Binding Tags, UpdateSourceTrigger=PropertyChanged}"  /></StackPanel>
+                    <StackPanel Margin="0,0,0,12"><TextBlock Text="Notes" Style="{StaticResource MutedText}" Margin="0,0,0,4" /><TextBox Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap" AcceptsReturn="True" MinHeight="54" /></StackPanel>
+
+                    <ItemsControl ItemsSource="{Binding Errors}">
+                        <ItemsControl.ItemTemplate><DataTemplate><TextBlock Text="{Binding}" Foreground="{StaticResource ErrorBrush}" TextWrapping="Wrap" Margin="0,0,0,3" /></DataTemplate></ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Text="{Binding Message}" Visibility="{Binding Message, Converter={StaticResource NullToCollapsed}}" TextWrapping="Wrap" Margin="0,4,0,0">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="{StaticResource SuccessBrush}" />
+                                <Style.Triggers><DataTrigger Binding="{Binding MessageIsError}" Value="True"><Setter Property="Foreground" Value="{StaticResource ErrorBrush}" /></DataTrigger></Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+
+                    <WrapPanel Margin="0,16,0,0">
+                        <Button Style="{StaticResource PrimaryButton}" Content="Save" Command="{Binding SaveCommand}" Margin="0,0,8,8" MinWidth="90" />
+                        <Button Style="{StaticResource GhostButton}" Content="Save and apply..." Command="{Binding SaveAndApplyCommand}" Margin="0,0,8,8" />
+                        <Button Style="{StaticResource GhostButton}" Content="Apply without saving..." Command="{Binding ApplyCommand}" Margin="0,0,8,8" />
+                        <Button Style="{StaticResource GhostButton}" Content="Save as new copy" Command="{Binding SaveAsNewCommand}" Margin="0,0,8,8" />
+                        <Button Style="{StaticResource DangerGhostButton}" Content="Delete" Command="{Binding DeleteCommand}" Visibility="{Binding IsEditingExisting, Converter={StaticResource BoolToVisibility}}" Margin="0,0,0,8" />
+                    </WrapPanel>
+                </StackPanel>
+            </Border>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

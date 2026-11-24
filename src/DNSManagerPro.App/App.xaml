@@ -15,6 +15,7 @@
             <conv:NullToCollapsedConverter x:Key="NullToCollapsed" />
             <conv:EnumToBoolConverter x:Key="EnumToBool" />
             <conv:InvertBoolConverter x:Key="InvertBool" />
+            <conv:BoolToTitleConverter x:Key="BoolToTitle" />
             <conv:EmptyToCollapsedConverter x:Key="EmptyToCollapsed" />
             <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
 
@@ -35,6 +36,12 @@
             <DataTemplate DataType="{x:Type vm:BenchmarkViewModel}">
                 <views:BenchmarkView />
             </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:ProfilesViewModel}">
+                <views:ProfilesView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:CustomDnsViewModel}">
+                <views:CustomDnsView />
+            </DataTemplate>
             <DataTemplate DataType="{x:Type vm:AdaptersViewModel}">
                 <views:AdaptersView />
             </DataTemplate>
@@ -47,6 +54,8 @@
         </ResourceDictionary>
     </Application.Resources>
 </Application>
+
+
 
 
 

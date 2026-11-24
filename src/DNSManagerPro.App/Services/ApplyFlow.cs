@@ -1,6 +1,7 @@
 using DNSManagerPro.App.Dialogs;
 using DNSManagerPro.Core.Abstractions;
 using DNSManagerPro.Core.Configuration;
+using DNSManagerPro.Core.Profiles;
 using DNSManagerPro.Core.Providers;
 using Microsoft.Extensions.Logging;
 
@@ -9,7 +10,9 @@ namespace DNSManagerPro.App.Services;
 /// <summary>Entry points that open the preview/confirm dialog for every way of changing DNS.</summary>
 public interface IApplyFlow
 {
-    Task ApplyProviderAsync(DnsProvider provider, string? adapterId = null);
+    Task<bool> ApplyProviderAsync(DnsProvider provider, string? adapterId = null);
+
+    Task<bool> ApplyProfileAsync(DnsProfile profile);
 
     Task RestoreAutomaticAsync(string? adapterId = null);
 
@@ -26,27 +29,45 @@ public sealed class ApplyFlow(
     DnsChangeService service,
     IElevationService elevation,
     IPrivilegeService privilege,
+    IEncryptedDnsService encrypted,
     IDialogService dialogs,
     IDnsHistoryRepository history,
     IProviderRepository providers,
+    ProfileService profiles,
     INavigationService nav,
     ILogger<ApplyFlow> logger) : IApplyFlow
 {
     public const string ArgProvider = "--apply-provider";
+    public const string ArgProfile = "--apply-profile";
     public const string ArgAutomatic = "--restore-automatic";
     public const string ArgPrevious = "--restore-previous";
 
-    public async Task ApplyProviderAsync(DnsProvider provider, string? adapterId = null)
+    public async Task<bool> ApplyProviderAsync(DnsProvider provider, string? adapterId = null)
     {
         if (!provider.HasAddresses)
         {
-            dialogs.Notify("No server addresses", $"{provider.Name} has no DNS server addresses to apply. Edit the provider and add them first.");
-            return;
+            dialogs.Notify("No server addresses", $"{provider.Name} has no DNS server addresses to apply. Edit it and add them first.");
+            return false;
         }
 
         await RefreshAdaptersAsync();
-        var req = new ApplyDnsRequest($"Apply {provider.Name}", provider.Name, provider, null, $"{ArgProvider} {provider.Id}");
-        await ShowAsync(req, adapterId);
+        var restart = provider.IsBuiltIn || provider.Id.StartsWith("custom-", StringComparison.Ordinal) ? $"{ArgProvider} {provider.Id}" : string.Empty;
+        return await ShowAsync(new ApplyDnsRequest($"Apply {provider.Name}", provider.Name, provider, null, restart), adapterId);
+    }
+
+    public async Task<bool> ApplyProfileAsync(DnsProfile profile)
+    {
+        await RefreshAdaptersAsync();
+        var restart = $"{ArgProfile} {profile.Id}";
+        var ok = profile.IsAutomatic
+            ? await ShowAsync(new ApplyDnsRequest($"Apply profile: {profile.Name}", profile.Name, null, null, restart), profile.AdapterId)
+            : await ShowAsync(new ApplyDnsRequest($"Apply profile: {profile.Name}", profile.Name, profile.ToProvider(), null, restart), profile.AdapterId);
+        if (ok)
+        {
+            await profiles.MarkAppliedAsync(profile.Id);
+        }
+
+        return ok;
     }
 
     public async Task RestoreAutomaticAsync(string? adapterId = null)
@@ -89,6 +110,15 @@ public sealed class ApplyFlow(
                     await ApplyProviderAsync(p);
                 }
             }
+            else if (args.Length >= 2 && args[0] == ArgProfile)
+            {
+                nav.NavigateTo(NavSection.Profiles);
+                var p = (await profiles.GetAllAsync()).FirstOrDefault(x => x.Id == args[1]);
+                if (p is not null)
+                {
+                    await ApplyProfileAsync(p);
+                }
+            }
             else if (args.Length >= 2 && args[0] == ArgPrevious)
             {
                 nav.NavigateTo(NavSection.Adapters);
@@ -103,10 +133,11 @@ public sealed class ApplyFlow(
 
     private async Task RefreshAdaptersAsync() => await state.RefreshAsync(false);
 
-    private async Task ShowAsync(ApplyDnsRequest request, string? adapterId)
+    private async Task<bool> ShowAsync(ApplyDnsRequest request, string? adapterId)
     {
-        var vm = new ApplyDnsViewModel(request, state.Adapters, adapterId ?? state.ActiveAdapter?.Id, service, elevation, privilege.IsElevated);
+        var vm = new ApplyDnsViewModel(request, state.Adapters, adapterId ?? state.ActiveAdapter?.Id, service, elevation, privilege.IsElevated, encrypted);
         dialogs.ShowApply(vm);
         await state.RefreshAsync(true); // always re-read: reflects both success and rollback
+        return vm.Succeeded;
     }
 }

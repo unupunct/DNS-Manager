@@ -40,12 +40,17 @@ public partial class App : Application
         sc.AddSingleton<IBenchmarkRepository, DNSManagerPro.Data.SqliteBenchmarkRepository>();
         sc.AddSingleton<DNSManagerPro.Core.Benchmark.BenchmarkRunner>();
         sc.AddSingleton<BenchmarkSession>();
+        sc.AddSingleton<IProfileRepository, DNSManagerPro.Data.SqliteProfileRepository>();
+        sc.AddSingleton<IEncryptedDnsService, NetshEncryptedDnsService>();
+        sc.AddSingleton<ProfileService>();
         sc.AddSingleton<SystemStateService>();
         sc.AddSingleton<INavigationService, NavigationService>();
         sc.AddTransient<DashboardViewModel>();
         sc.AddSingleton<ProvidersViewModel>();
         sc.AddSingleton<AdaptersViewModel>();
         sc.AddSingleton<BenchmarkViewModel>();
+        sc.AddSingleton<ProfilesViewModel>();
+        sc.AddSingleton<CustomDnsViewModel>();
         sc.AddSingleton<MainViewModel>();
         sc.AddSingleton<MainWindow>();
         _services = sc.BuildServiceProvider();
@@ -92,6 +97,7 @@ public partial class App : Application
         base.OnExit(e);
     }
 }
+
 
 
 

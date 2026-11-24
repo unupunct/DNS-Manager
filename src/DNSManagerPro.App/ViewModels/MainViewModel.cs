@@ -105,9 +105,9 @@ public sealed partial class MainViewModel : ObservableObject
         NavSection.Dashboard => _services.GetRequiredService<DashboardViewModel>(),
         NavSection.Providers => _services.GetRequiredService<ProvidersViewModel>(),
         NavSection.Benchmark => _services.GetRequiredService<BenchmarkViewModel>(),
-        NavSection.CustomDns => new PlaceholderViewModel("Custom DNS", "Create and validate your own DNS configurations.", "Phase 5"),
+        NavSection.CustomDns => _services.GetRequiredService<CustomDnsViewModel>(),
         NavSection.Adapters => _services.GetRequiredService<AdaptersViewModel>(),
-        NavSection.Profiles => new PlaceholderViewModel("DNS Profiles", "Save, export and apply named DNS profiles.", "Phase 5"),
+        NavSection.Profiles => _services.GetRequiredService<ProfilesViewModel>(),
         NavSection.Diagnostics => new PlaceholderViewModel("DNS Diagnostics", "Lookups, record queries and an automated troubleshooting workflow.", "Phase 6"),
         NavSection.History => new PlaceholderViewModel("History", "Timeline of DNS changes, benchmarks and diagnostics.", "Phase 6"),
         NavSection.Settings => new PlaceholderViewModel("Settings", "General, benchmark, monitoring, network and data options.", "Phase 7"),
@@ -125,5 +125,6 @@ public sealed partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(IsBusy));
     }
 }
+
 
 

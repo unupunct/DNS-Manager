@@ -18,6 +18,9 @@ public interface IDialogService
 
     /// <summary>Asks where to save a file. Returns null when cancelled.</summary>
     string? PickSaveFile(string title, string filter, string defaultFileName);
+
+    /// <summary>Asks which file to open. Returns null when cancelled.</summary>
+    string? PickOpenFile(string title, string filter);
 }
 
 public sealed class DialogService : IDialogService
@@ -41,6 +44,12 @@ public sealed class DialogService : IDialogService
     public void Notify(string title, string message) =>
         new ConfirmWindow(title, message, "OK", showCancel: false) { Owner = Owner }.ShowDialog();
 
+    public string? PickOpenFile(string title, string filter)
+    {
+        var dlg = new Microsoft.Win32.OpenFileDialog { Title = title, Filter = filter, CheckFileExists = true };
+        return dlg.ShowDialog(Owner) == true ? dlg.FileName : null;
+    }
+
     public string? PickSaveFile(string title, string filter, string defaultFileName)
     {
         var dlg = new Microsoft.Win32.SaveFileDialog { Title = title, Filter = filter, FileName = defaultFileName, OverwritePrompt = true };
@@ -57,4 +66,5 @@ public sealed class DialogService : IDialogService
         return win.ShowDialog() == true;
     }
 }
+
 

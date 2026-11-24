@@ -1,0 +1,107 @@
+<UserControl x:Class="DNSManagerPro.App.Views.ProfilesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:DNSManagerPro.App.Controls"
+             Loaded="OnLoaded">
+    <UserControl.RenderTransform><TranslateTransform /></UserControl.RenderTransform>
+    <UserControl.Triggers>
+        <EventTrigger RoutedEvent="Loaded">
+            <BeginStoryboard>
+                <Storyboard>
+                    <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.3" />
+                    <DoubleAnimation Storyboard.TargetProperty="RenderTransform.(TranslateTransform.Y)" From="14" To="0" Duration="0:0:0.3" />
+                </Storyboard>
+            </BeginStoryboard>
+        </EventTrigger>
+    </UserControl.Triggers>
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="32,26,16,24">
+            <DockPanel Margin="0,0,16,14">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Style="{StaticResource GhostButton}" Content="Import..." Command="{Binding ImportCommand}" Margin="0,0,8,0" />
+                    <Button Style="{StaticResource GhostButton}" Content="Export all..." Command="{Binding ExportAllCommand}" Margin="0,0,8,0" />
+                    <Button Style="{StaticResource PrimaryButton}" Content="+  New profile" Command="{Binding NewCommand}" />
+                </StackPanel>
+                <StackPanel>
+                    <TextBlock Text="DNS Profiles" Style="{StaticResource PageTitle}" />
+                    <TextBlock Text="Named DNS configurations you can apply in one step. Applying always shows a review first." Style="{StaticResource MutedText}" Margin="0,2,0,0" />
+                </StackPanel>
+            </DockPanel>
+
+            <DockPanel Margin="0,0,16,12">
+                <Grid DockPanel.Dock="Right" Width="220">
+                    <TextBox x:Name="SearchBox" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" ToolTip="Search name, tags, description" />
+                    <TextBlock Text="Search profiles..." Foreground="{StaticResource TextDimBrush}" IsHitTestVisible="False" VerticalAlignment="Center" Margin="12,0,0,0">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers><DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value=""><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Grid>
+                <ItemsControl ItemsSource="{Binding Categories}">
+                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate><DataTemplate><RadioButton GroupName="filter" Style="{StaticResource SegmentRadio}" Content="{Binding Label}" IsChecked="{Binding IsSelected, Mode=TwoWay}" /></DataTemplate></ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </DockPanel>
+
+            <TextBlock Text="START FROM A TEMPLATE" Style="{StaticResource CardTitle}" Margin="0,4,0,8" />
+            <ItemsControl ItemsSource="{Binding Templates}" Margin="0,0,16,12">
+                <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Button Style="{StaticResource GhostButton}" Content="{Binding Name}" Margin="0,0,8,8" ToolTip="{Binding Description}" Padding="12,6"
+                                Command="{Binding DataContext.AddTemplateCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <TextBlock Text="{Binding Message}" Visibility="{Binding Message, Converter={StaticResource NullToCollapsed}}" Margin="0,0,16,12" TextWrapping="Wrap">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Foreground" Value="{StaticResource SuccessBrush}" />
+                        <Style.Triggers><DataTrigger Binding="{Binding MessageIsError}" Value="True"><Setter Property="Foreground" Value="{StaticResource ErrorBrush}" /></DataTrigger></Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+            <TextBlock Text="No profiles here yet. Pick a template above, press New profile, or import a file." Style="{StaticResource MutedText}" FontSize="13" Margin="0,12,0,0"
+                       Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisibility}}" />
+
+            <ItemsControl ItemsSource="{Binding Cards}">
+                <ItemsControl.ItemsPanel><ItemsPanelTemplate><c:AdaptiveGrid MinColumnWidth="420" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource CardStyle}" VerticalAlignment="Top">
+                            <StackPanel>
+                                <DockPanel>
+                                    <Border DockPanel.Dock="Right" Style="{StaticResource BadgeBorder}" Margin="8,0,0,0"><TextBlock Text="{Binding Category}" FontSize="10.5" Foreground="{StaticResource AccentBrush}" FontWeight="SemiBold" /></Border>
+                                    <TextBlock Text="{Binding Name}" FontSize="17" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                </DockPanel>
+                                <TextBlock Text="{Binding Description}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,4,0,0" Visibility="{Binding Description, Converter={StaticResource EmptyToCollapsed}}" />
+                                <TextBlock Text="{Binding Summary}" FontFamily="Consolas" FontSize="12.5" TextWrapping="Wrap" Margin="0,12,0,0" />
+                                <StackPanel Orientation="Horizontal" Margin="0,8,0,0" Visibility="{Binding HasEncrypted, Converter={StaticResource BoolToVisibility}}">
+                                    <Border Style="{StaticResource BadgeBorder}"><TextBlock Text="{Binding EncryptedText, StringFormat='Encrypted endpoints: {0}'}" FontSize="11" Foreground="{StaticResource AccentBrush}" /></Border>
+                                </StackPanel>
+                                <TextBlock Text="{Binding AdapterText}" Style="{StaticResource MutedText}" Margin="0,10,0,0" />
+                                <TextBlock Style="{StaticResource MutedText}" Margin="0,2,0,0"><Run Text="{Binding CreatedText, Mode=OneWay}" /><Run Text="  -  " /><Run Text="{Binding AppliedText, Mode=OneWay}" /></TextBlock>
+                                <ItemsControl ItemsSource="{Binding Tags}" Margin="0,8,0,0">
+                                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate><DataTemplate><Border Style="{StaticResource BadgeBorder}"><TextBlock Text="{Binding}" FontSize="11" Foreground="{StaticResource TextMutedBrush}" /></Border></DataTemplate></ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <WrapPanel Margin="0,14,0,0">
+                                    <Button Style="{StaticResource PrimaryButton}" Content="Apply..." Command="{Binding ApplyCommand}" Margin="0,0,8,6" />
+                                    <Button Style="{StaticResource GhostButton}" Content="Edit" Command="{Binding EditCommand}" Margin="0,0,8,6" />
+                                    <Button Style="{StaticResource GhostButton}" Content="Duplicate" Command="{Binding DuplicateCommand}" Margin="0,0,8,6" />
+                                    <Button Style="{StaticResource GhostButton}" Content="Export" Command="{Binding ExportCommand}" Margin="0,0,8,6" />
+                                    <Button Style="{StaticResource DangerGhostButton}" Content="Delete" Command="{Binding DeleteCommand}" Margin="0,0,0,6" />
+                                </WrapPanel>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
+

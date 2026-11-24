@@ -78,6 +78,27 @@ public sealed class SqliteDatabase(string path, ILogger<SqliteDatabase>? logger 
         CREATE INDEX IX_BenchmarkResults_Run ON BenchmarkResults (RunId);
         CREATE INDEX IX_BenchmarkResults_Provider ON BenchmarkResults (ProviderId, Timestamp);
         """,
+        // v4: DNS profiles
+        """
+        CREATE TABLE DNSProfiles (
+            Id TEXT PRIMARY KEY NOT NULL,
+            Name TEXT NOT NULL,
+            Description TEXT NOT NULL DEFAULT '',
+            Category TEXT NOT NULL DEFAULT 'Custom',
+            ProviderId TEXT REFERENCES DNSProviders(Id) ON DELETE SET NULL,
+            IsAutomatic INTEGER NOT NULL DEFAULT 0,
+            IPv4Primary TEXT, IPv4Secondary TEXT, IPv6Primary TEXT, IPv6Secondary TEXT,
+            DohUrl TEXT, DotHost TEXT, DoqHost TEXT,
+            AdapterId TEXT, AdapterName TEXT,
+            Tags TEXT NOT NULL DEFAULT '',
+            Notes TEXT NOT NULL DEFAULT '',
+            CreatedAt TEXT NOT NULL,
+            UpdatedAt TEXT NOT NULL,
+            LastAppliedAt TEXT
+        );
+        CREATE INDEX IX_DNSProfiles_Name ON DNSProfiles (Name);
+        CREATE INDEX IX_DNSProfiles_Provider ON DNSProfiles (ProviderId);
+        """,
     ];
 
     public static int LatestVersion => Migrations.Length;

@@ -22,11 +22,13 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
     private readonly DispatcherTimer _timer;
 
     private readonly BenchmarkSession _session;
+    private readonly ProfileService _profiles;
 
-    public DashboardViewModel(SystemStateService state, INavigationService nav, IDnsCacheService cache, IApplyFlow flow, BenchmarkSession session)
+    public DashboardViewModel(SystemStateService state, INavigationService nav, IDnsCacheService cache, IApplyFlow flow, BenchmarkSession session, ProfileService profiles)
     {
         _state = state;
         _session = session;
+        _profiles = profiles;
         _session.PropertyChanged += OnStateChanged;
         _nav = nav;
         _cache = cache;
@@ -88,7 +90,11 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
     private void RunDiagnostics() => _nav.NavigateTo(NavSection.Diagnostics);
 
     [RelayCommand]
-    private void CreateProfile() => _nav.NavigateTo(NavSection.Profiles);
+    private void CreateProfile()
+    {
+        _profiles.StartNew = true;
+        _nav.NavigateTo(NavSection.CustomDns);
+    }
 
     [RelayCommand]
     private async Task FlushDnsAsync()
@@ -208,5 +214,6 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
     private static string FormatSpeed(long bps) =>
         bps >= 1_000_000_000 ? $"{bps / 1_000_000_000.0:0.#} Gbps" : $"{bps / 1_000_000.0:0} Mbps";
 }
+
 
 
