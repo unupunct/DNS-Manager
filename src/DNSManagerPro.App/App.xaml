@@ -14,6 +14,8 @@
             <conv:ToneBrushConverter x:Key="ToneBrush" />
             <conv:NullToCollapsedConverter x:Key="NullToCollapsed" />
             <conv:EnumToBoolConverter x:Key="EnumToBool" />
+            <conv:InvertBoolConverter x:Key="InvertBool" />
+            <conv:EmptyToCollapsedConverter x:Key="EmptyToCollapsed" />
             <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
 
             <DataTemplate x:Key="InfoRowTemplate">
@@ -30,6 +32,9 @@
             <DataTemplate DataType="{x:Type vm:ProvidersViewModel}">
                 <views:ProvidersView />
             </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:BenchmarkViewModel}">
+                <views:BenchmarkView />
+            </DataTemplate>
             <DataTemplate DataType="{x:Type vm:AdaptersViewModel}">
                 <views:AdaptersView />
             </DataTemplate>
@@ -42,5 +47,6 @@
         </ResourceDictionary>
     </Application.Resources>
 </Application>
+
 
 

@@ -38,3 +38,12 @@ Rules: the App depends on interfaces from Core; Windows-specific code lives only
 etsh interface ipv4|ipv6 set|add dnsservers with an argument *list* (no shell) built only from an integer interface index and parsed IPAddress values. Chosen over WMI (IPv4 only) and PowerShell (startup cost, quoting surface).
 - **Elevation**: the app runs as a standard user; ElevationService relaunches with the UAC unas verb and a command-line intent (--apply-provider <id>, --restore-automatic, --restore-previous <adapterId>) so the review reopens. Only one adapter is ever changed per operation; there is no "all adapters" action.
 - **History schema** (migration v2): DNSHistory(AdapterId, AdapterName, PreviousConfiguration JSON, NewConfiguration, Operation, Result, Message, Timestamp). Restore-previous uses the latest Success row for the adapter.
+
+## Phase 4 decisions
+
+- **Engine** (Core.Benchmark): `BenchmarkRunner` interleaves work (rotating server order each round, capped parallelism), optional warm-up queries (Warm mode) or random sub-domain names (Cold mode, NXDOMAIN counts as answered), retries only after a failure, cancellation returns the partial run. It depends on `IDnsQueryClient` only, so it is tested with fakes.
+- **Transports** (`Networking.DnsQueryClient`): UDP/TCP through DnsClient with no client cache; DoH implemented on the RFC 8484 wire format (`DnsWire`) over a pooled HTTP/2 connection (handshake excluded after warm-up). Socket-level failures (e.g. TCP/53 blocked by a firewall) are reported with their real reason instead of a generic error.
+- **Statistics**: sample standard deviation; percentiles by linear interpolation; ranking by median then P95; a server needs >= 50% answered queries to be ranked; ties use `WithinNoise` = max(2 ms, 10%) measured against the leader.
+- **Persistence** (migration v3): `BenchmarkRuns` + `BenchmarkResults` (raw samples, cascade delete). Warm-up queries are not stored.
+- **Export**: RFC 4180 CSV with spreadsheet-formula neutralisation; JSON includes raw samples, summary, conclusion and a limitations statement.
+- **Charts** are small custom WPF controls (`FillBar`, `RangeBar`, `MultiLineChart`) instead of a charting dependency.

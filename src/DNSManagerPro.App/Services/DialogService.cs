@@ -15,6 +15,9 @@ public interface IDialogService
 
     /// <summary>Shows the preview/apply dialog. True when a change was applied successfully.</summary>
     bool ShowApply(ApplyDnsViewModel viewModel);
+
+    /// <summary>Asks where to save a file. Returns null when cancelled.</summary>
+    string? PickSaveFile(string title, string filter, string defaultFileName);
 }
 
 public sealed class DialogService : IDialogService
@@ -38,6 +41,12 @@ public sealed class DialogService : IDialogService
     public void Notify(string title, string message) =>
         new ConfirmWindow(title, message, "OK", showCancel: false) { Owner = Owner }.ShowDialog();
 
+    public string? PickSaveFile(string title, string filter, string defaultFileName)
+    {
+        var dlg = new Microsoft.Win32.SaveFileDialog { Title = title, Filter = filter, FileName = defaultFileName, OverwritePrompt = true };
+        return dlg.ShowDialog(Owner) == true ? dlg.FileName : null;
+    }
+
     public bool ShowApply(ApplyDnsViewModel viewModel)
     {
         var win = new ApplyDnsWindow { DataContext = viewModel, Owner = Owner };
@@ -48,3 +57,4 @@ public sealed class DialogService : IDialogService
         return win.ShowDialog() == true;
     }
 }
+

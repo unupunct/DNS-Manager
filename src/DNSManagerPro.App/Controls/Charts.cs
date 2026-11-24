@@ -233,3 +233,191 @@ public sealed class SparklineChart : FrameworkElement
 }
 
 
+
+/// <summary>A named line in <see cref="MultiLineChart"/>. NaN values leave gaps.</summary>
+public sealed record ChartSeries(string Name, Brush Brush, IReadOnlyList<double> Values);
+
+/// <summary>Horizontal progress-style bar: fills Fraction (0..1) of its width.</summary>
+public sealed class FillBar : FrameworkElement
+{
+    public static readonly DependencyProperty FractionProperty = DependencyProperty.Register(
+        nameof(Fraction), typeof(double), typeof(FillBar), new FrameworkPropertyMetadata(0.0, FrameworkPropertyMetadataOptions.AffectsRender));
+
+    public static readonly DependencyProperty FillProperty = DependencyProperty.Register(
+        nameof(Fill), typeof(Brush), typeof(FillBar), new FrameworkPropertyMetadata(Brushes.DeepSkyBlue, FrameworkPropertyMetadataOptions.AffectsRender));
+
+    public double Fraction
+    {
+        get => (double)GetValue(FractionProperty);
+        set => SetValue(FractionProperty, value);
+    }
+
+    public Brush Fill
+    {
+        get => (Brush)GetValue(FillProperty);
+        set => SetValue(FillProperty, value);
+    }
+
+    protected override void OnRender(DrawingContext drawingContext)
+    {
+        var h = Math.Min(ActualHeight, 12);
+        var y = (ActualHeight - h) / 2;
+        drawingContext.DrawRoundedRectangle(new SolidColorBrush(Color.FromArgb(40, 148, 163, 184)), null, new Rect(0, y, ActualWidth, h), h / 2, h / 2);
+        var w = Math.Clamp(Fraction, 0, 1) * ActualWidth;
+        if (w > 0)
+        {
+            drawingContext.DrawRoundedRectangle(Fill, null, new Rect(0, y, Math.Max(w, h), h), h / 2, h / 2);
+        }
+    }
+}
+
+/// <summary>Min-to-max span on a 0..AxisMax axis with median tick and mean dot.</summary>
+public sealed class RangeBar : FrameworkElement
+{
+    private static DependencyProperty Reg(string name, double def) => DependencyProperty.Register(
+        name, typeof(double), typeof(RangeBar), new FrameworkPropertyMetadata(def, FrameworkPropertyMetadataOptions.AffectsRender));
+
+    public static readonly DependencyProperty MinProperty = Reg(nameof(Min), 0);
+    public static readonly DependencyProperty MaxProperty = Reg(nameof(Max), 0);
+    public static readonly DependencyProperty MedianProperty = Reg(nameof(Median), 0);
+    public static readonly DependencyProperty MeanProperty = Reg(nameof(Mean), 0);
+    public static readonly DependencyProperty AxisMaxProperty = Reg(nameof(AxisMax), 1);
+
+    public static readonly DependencyProperty FillProperty = DependencyProperty.Register(
+        nameof(Fill), typeof(Brush), typeof(RangeBar), new FrameworkPropertyMetadata(Brushes.DeepSkyBlue, FrameworkPropertyMetadataOptions.AffectsRender));
+
+    public double Min { get => (double)GetValue(MinProperty); set => SetValue(MinProperty, value); }
+
+    public double Max { get => (double)GetValue(MaxProperty); set => SetValue(MaxProperty, value); }
+
+    public double Median { get => (double)GetValue(MedianProperty); set => SetValue(MedianProperty, value); }
+
+    public double Mean { get => (double)GetValue(MeanProperty); set => SetValue(MeanProperty, value); }
+
+    public double AxisMax { get => (double)GetValue(AxisMaxProperty); set => SetValue(AxisMaxProperty, value); }
+
+    public Brush Fill { get => (Brush)GetValue(FillProperty); set => SetValue(FillProperty, value); }
+
+    protected override void OnRender(DrawingContext drawingContext)
+    {
+        var axis = AxisMax <= 0 ? 1 : AxisMax;
+        double X(double v) => Math.Clamp(v / axis, 0, 1) * ActualWidth;
+        var h = Math.Min(ActualHeight, 14);
+        var y = (ActualHeight - h) / 2;
+        drawingContext.DrawRoundedRectangle(new SolidColorBrush(Color.FromArgb(30, 148, 163, 184)), null, new Rect(0, y, ActualWidth, h), 4, 4);
+        var x0 = X(Min);
+        var x1 = Math.Max(X(Max), x0 + 3);
+        var span = Fill.Clone();
+        span.Opacity = 0.45;
+        drawingContext.DrawRoundedRectangle(span, null, new Rect(x0, y, x1 - x0, h), 4, 4);
+        drawingContext.DrawLine(new Pen(Brushes.White, 2), new Point(X(Median), y - 2), new Point(X(Median), y + h + 2));
+        drawingContext.DrawEllipse(Fill, new Pen(Brushes.White, 1), new Point(X(Mean), y + (h / 2)), 3.5, 3.5);
+    }
+}
+
+/// <summary>Multi-series line chart (one point per benchmark run) with hover details.</summary>
+public sealed class MultiLineChart : FrameworkElement
+{
+    public static readonly DependencyProperty SeriesProperty = DependencyProperty.Register(
+        nameof(Series), typeof(IEnumerable<ChartSeries>), typeof(MultiLineChart),
+        new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender, OnSeriesChanged));
+
+    private static void OnSeriesChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        var chart = (MultiLineChart)d;
+        if (e.OldValue is INotifyCollectionChanged oldC)
+        {
+            oldC.CollectionChanged -= chart.OnSeriesCollectionChanged;
+        }
+
+        if (e.NewValue is INotifyCollectionChanged newC)
+        {
+            newC.CollectionChanged += chart.OnSeriesCollectionChanged;
+        }
+    }
+
+    private void OnSeriesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e) => InvalidateVisual();
+
+    public IEnumerable<ChartSeries>? Series
+    {
+        get => (IEnumerable<ChartSeries>?)GetValue(SeriesProperty);
+        set => SetValue(SeriesProperty, value);
+    }
+
+    private const double Left = 38;
+    private const double Pad = 8;
+
+    protected override void OnMouseMove(System.Windows.Input.MouseEventArgs e)
+    {
+        base.OnMouseMove(e);
+        var list = (Series ?? []).ToList();
+        var n = list.Count == 0 ? 0 : list.Max(s => s.Values.Count);
+        if (n == 0)
+        {
+            ToolTip = null;
+            return;
+        }
+
+        var x = e.GetPosition(this).X;
+        var idx = n == 1 ? 0 : (int)Math.Round((x - Left) / Math.Max(1, ActualWidth - Left - Pad) * (n - 1));
+        idx = Math.Clamp(idx, 0, n - 1);
+        var lines = list.Where(s => idx < s.Values.Count && !double.IsNaN(s.Values[idx]))
+            .Select(s => $"{s.Name}: {s.Values[idx]:F1} ms");
+        ToolTip = $"Run {idx + 1} of {n}\n" + string.Join("\n", lines);
+    }
+
+    protected override void OnRender(DrawingContext drawingContext)
+    {
+        var dc = drawingContext;
+        dc.DrawRectangle(Brushes.Transparent, null, new Rect(0, 0, ActualWidth, ActualHeight));
+        var list = (Series ?? []).ToList();
+        var all = list.SelectMany(s => s.Values).Where(v => !double.IsNaN(v)).ToList();
+        var w = ActualWidth - Left - Pad;
+        var h = ActualHeight - (Pad * 2);
+        var grid = new Pen(new SolidColorBrush(Color.FromArgb(40, 148, 163, 184)), 1);
+        var dpi = System.Windows.Media.VisualTreeHelper.GetDpi(this).PixelsPerDip;
+        var max = all.Count == 0 ? 10 : Math.Max(all.Max() * 1.15, 10);
+
+        for (var i = 0; i <= 3; i++)
+        {
+            var y = Pad + (h * i / 3);
+            dc.DrawLine(grid, new Point(Left, y), new Point(ActualWidth - Pad, y));
+            var label = new FormattedText(
+                $"{max * (3 - i) / 3:F0}", System.Globalization.CultureInfo.InvariantCulture, FlowDirection.LeftToRight,
+                new Typeface("Segoe UI"), 10.5, new SolidColorBrush(Color.FromRgb(148, 163, 184)), dpi);
+            dc.DrawText(label, new Point(Left - label.Width - 6, y - (label.Height / 2)));
+        }
+
+        var n = list.Count == 0 ? 0 : list.Max(s => s.Values.Count);
+        if (n == 0)
+        {
+            return;
+        }
+
+        double X(int i) => Left + (n == 1 ? w / 2 : i * w / (n - 1));
+        double Y(double v) => Pad + h - (v / max * h);
+        foreach (var s in list)
+        {
+            var pen = new Pen(s.Brush, 2) { LineJoin = PenLineJoin.Round };
+            Point? prev = null;
+            for (var i = 0; i < s.Values.Count; i++)
+            {
+                if (double.IsNaN(s.Values[i]))
+                {
+                    prev = null;
+                    continue;
+                }
+
+                var p = new Point(X(i), Y(s.Values[i]));
+                if (prev is { } q)
+                {
+                    dc.DrawLine(pen, q, p);
+                }
+
+                dc.DrawEllipse(s.Brush, null, p, 3, 3);
+                prev = p;
+            }
+        }
+    }
+}
+

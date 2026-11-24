@@ -36,11 +36,16 @@ public partial class App : Application
         sc.AddSingleton<DNSManagerPro.Core.Configuration.DnsChangeService>();
         sc.AddSingleton<IElevationService, ElevationService>();
         sc.AddSingleton<IApplyFlow, ApplyFlow>();
+        sc.AddSingleton<IDnsQueryClient, DnsQueryClient>();
+        sc.AddSingleton<IBenchmarkRepository, DNSManagerPro.Data.SqliteBenchmarkRepository>();
+        sc.AddSingleton<DNSManagerPro.Core.Benchmark.BenchmarkRunner>();
+        sc.AddSingleton<BenchmarkSession>();
         sc.AddSingleton<SystemStateService>();
         sc.AddSingleton<INavigationService, NavigationService>();
         sc.AddTransient<DashboardViewModel>();
         sc.AddSingleton<ProvidersViewModel>();
         sc.AddSingleton<AdaptersViewModel>();
+        sc.AddSingleton<BenchmarkViewModel>();
         sc.AddSingleton<MainViewModel>();
         sc.AddSingleton<MainWindow>();
         _services = sc.BuildServiceProvider();
@@ -70,6 +75,7 @@ public partial class App : Application
         };
 
         log.LogInformation("DNS Manager Pro starting (elevated: {Elevated})", _services.GetRequiredService<IPrivilegeService>().IsElevated);
+        _ = _services.GetRequiredService<BenchmarkSession>().LoadAsync();
         _services.GetRequiredService<MainWindow>().Show();
         if (e.Args.Length > 0)
         {
@@ -86,5 +92,6 @@ public partial class App : Application
         base.OnExit(e);
     }
 }
+
 
 

@@ -104,7 +104,7 @@ public sealed partial class MainViewModel : ObservableObject
     {
         NavSection.Dashboard => _services.GetRequiredService<DashboardViewModel>(),
         NavSection.Providers => _services.GetRequiredService<ProvidersViewModel>(),
-        NavSection.Benchmark => new PlaceholderViewModel("DNS Benchmark", "Compare providers with repeated direct DNS queries.", "Phase 4"),
+        NavSection.Benchmark => _services.GetRequiredService<BenchmarkViewModel>(),
         NavSection.CustomDns => new PlaceholderViewModel("Custom DNS", "Create and validate your own DNS configurations.", "Phase 5"),
         NavSection.Adapters => _services.GetRequiredService<AdaptersViewModel>(),
         NavSection.Profiles => new PlaceholderViewModel("DNS Profiles", "Save, export and apply named DNS profiles.", "Phase 5"),
@@ -125,4 +125,5 @@ public sealed partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(IsBusy));
     }
 }
+
 

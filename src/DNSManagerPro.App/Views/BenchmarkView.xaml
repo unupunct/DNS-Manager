@@ -1,0 +1,299 @@
+<UserControl x:Class="DNSManagerPro.App.Views.BenchmarkView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:DNSManagerPro.App.Controls"
+             xmlns:b="clr-namespace:DNSManagerPro.Core.Benchmark;assembly=DNSManagerPro.Core"
+             Loaded="OnLoaded">
+    <UserControl.RenderTransform><TranslateTransform /></UserControl.RenderTransform>
+    <UserControl.Triggers>
+        <EventTrigger RoutedEvent="Loaded">
+            <BeginStoryboard>
+                <Storyboard>
+                    <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.3" />
+                    <DoubleAnimation Storyboard.TargetProperty="RenderTransform.(TranslateTransform.Y)" From="14" To="0" Duration="0:0:0.3" />
+                </Storyboard>
+            </BeginStoryboard>
+        </EventTrigger>
+    </UserControl.Triggers>
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="32,26,16,24">
+            <DockPanel Margin="0,0,16,16">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Style="{StaticResource GhostButton}" Content="Stop" Command="{Binding StopCommand}" Margin="0,0,10,0" MinWidth="80" />
+                    <Button Style="{StaticResource PrimaryButton}" Content="Start benchmark" Command="{Binding StartCommand}" MinWidth="150" />
+                </StackPanel>
+                <StackPanel>
+                    <TextBlock Text="DNS Benchmark" Style="{StaticResource PageTitle}" />
+                    <TextBlock Text="Direct queries to each server (not the OS resolver), repeated and aggregated." Style="{StaticResource MutedText}" Margin="0,2,0,0" />
+                </StackPanel>
+            </DockPanel>
+
+            <c:AdaptiveGrid MinColumnWidth="480">
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <DockPanel Margin="0,0,0,10">
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                <Button Style="{StaticResource TableHeaderButton}" Content="All" Command="{Binding SelectAllCommand}" Margin="0,0,12,0" />
+                                <Button Style="{StaticResource TableHeaderButton}" Content="None" Command="{Binding SelectNoneCommand}" />
+                            </StackPanel>
+                            <TextBlock Text="SERVERS TO TEST" Style="{StaticResource CardTitle}" Margin="0" />
+                        </DockPanel>
+                        <ScrollViewer MaxHeight="270" VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding Targets}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <DockPanel Margin="0,0,10,8">
+                                            <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE711;" FontSize="11" Width="26" Height="26" ToolTip="Remove"
+                                                    Visibility="{Binding IsCustom, Converter={StaticResource BoolToVisibility}}"
+                                                    Command="{Binding DataContext.RemoveCustomCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+                                            <CheckBox IsChecked="{Binding IsSelected}">
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                                    <TextBlock Text="{Binding Detail}" Style="{StaticResource MutedText}" TextTrimming="CharacterEllipsis" />
+                                                </StackPanel>
+                                            </CheckBox>
+                                        </DockPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                        <TextBlock Text="Add a custom server (IPv4 or IPv6)" Style="{StaticResource MutedText}" Margin="0,10,0,4" />
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="Add" Command="{Binding AddCustomCommand}" Margin="8,0,0,0" />
+                            <TextBox Text="{Binding CustomServerText, UpdateSourceTrigger=PropertyChanged}" />
+                        </DockPanel>
+                        <TextBlock Text="{Binding CustomServerError}" Foreground="{StaticResource ErrorBrush}" FontSize="12" Margin="0,4,0,0" Visibility="{Binding CustomServerError, Converter={StaticResource NullToCollapsed}}" />
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <TextBlock Text="TEST SETTINGS" Style="{StaticResource CardTitle}" />
+                        <TextBlock Text="Domains (comma or space separated)" Style="{StaticResource MutedText}" Margin="0,0,0,4" />
+                        <TextBox Text="{Binding DomainsText, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap" AcceptsReturn="True" MinHeight="54" />
+                        <UniformGrid Columns="4" Margin="0,12,0,0">
+                            <StackPanel Margin="0,0,8,0"><TextBlock Text="Repetitions" Style="{StaticResource MutedText}" Margin="0,0,0,4" /><TextBox Text="{Binding RepetitionsText, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+                            <StackPanel Margin="0,0,8,0"><TextBlock Text="Timeout (ms)" Style="{StaticResource MutedText}" Margin="0,0,0,4" /><TextBox Text="{Binding TimeoutText, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+                            <StackPanel Margin="0,0,8,0"><TextBlock Text="Parallel" Style="{StaticResource MutedText}" Margin="0,0,0,4" /><TextBox Text="{Binding ParallelText, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+                            <StackPanel><TextBlock Text="Retries" Style="{StaticResource MutedText}" Margin="0,0,0,4" /><TextBox Text="{Binding RetriesText, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+                        </UniformGrid>
+                        <TextBlock Text="Cache handling" Style="{StaticResource MutedText}" Margin="0,12,0,4" />
+                        <StackPanel Orientation="Horizontal">
+                            <RadioButton GroupName="CacheModeChoice" Style="{StaticResource SegmentRadio}" Content="Warm (cached answers)" IsEnabled="{Binding IsRunning, Converter={StaticResource InvertBool}}" IsChecked="{Binding CacheModeChoice, Converter={StaticResource EnumToBool}, ConverterParameter={x:Static b:CacheMode.Warm}}" />
+                            <RadioButton GroupName="CacheModeChoice" Style="{StaticResource SegmentRadio}" Content="Cold (random sub-domains)" IsEnabled="{Binding IsRunning, Converter={StaticResource InvertBool}}" IsChecked="{Binding CacheModeChoice, Converter={StaticResource EnumToBool}, ConverterParameter={x:Static b:CacheMode.Cold}}" />
+                        </StackPanel>
+                        <TextBlock Text="Record type" Style="{StaticResource MutedText}" Margin="0,12,0,4" />
+                        <StackPanel Orientation="Horizontal">
+                            <RadioButton GroupName="RecordKindChoice" Style="{StaticResource SegmentRadio}" Content="A (IPv4)" IsEnabled="{Binding IsRunning, Converter={StaticResource InvertBool}}" IsChecked="{Binding RecordKindChoice, Converter={StaticResource EnumToBool}, ConverterParameter={x:Static b:RecordKind.A}}" />
+                            <RadioButton GroupName="RecordKindChoice" Style="{StaticResource SegmentRadio}" Content="AAAA (IPv6)" IsEnabled="{Binding IsRunning, Converter={StaticResource InvertBool}}" IsChecked="{Binding RecordKindChoice, Converter={StaticResource EnumToBool}, ConverterParameter={x:Static b:RecordKind.AAAA}}" />
+                        </StackPanel>
+                        <WrapPanel Margin="0,14,0,0">
+                            <CheckBox Content="Also test TCP" IsChecked="{Binding IncludeTcp}" Margin="0,0,18,6" />
+                            <CheckBox Content="Also test DoH (encrypted, where available)" IsChecked="{Binding IncludeDoh}" Margin="0,0,18,6" />
+                            <CheckBox Content="Include IPv6 servers" IsChecked="{Binding IncludeIPv6}" Margin="0,0,0,6" />
+                        </WrapPanel>
+                    </StackPanel>
+                </Border>
+            </c:AdaptiveGrid>
+
+            <ItemsControl ItemsSource="{Binding Errors}" Margin="0,0,16,8">
+                <ItemsControl.ItemTemplate><DataTemplate><TextBlock Text="{Binding}" Foreground="{StaticResource ErrorBrush}" /></DataTemplate></ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <StackPanel Margin="0,0,16,12" Visibility="{Binding IsRunning, Converter={StaticResource BoolToVisibility}}">
+                <ProgressBar Value="{Binding ProgressValue}" Maximum="{Binding ProgressMax}" Height="6" Foreground="{StaticResource AccentBrush}" Background="#2B384C" BorderThickness="0" />
+                <TextBlock Text="{Binding ProgressText}" Style="{StaticResource MutedText}" Margin="0,6,0,0" />
+            </StackPanel>
+            <TextBlock Text="{Binding Message}" Visibility="{Binding Message, Converter={StaticResource NullToCollapsed}}" Margin="0,0,16,12" TextWrapping="Wrap">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Foreground" Value="{StaticResource SuccessBrush}" />
+                        <Style.Triggers><DataTrigger Binding="{Binding MessageIsError}" Value="True"><Setter Property="Foreground" Value="{StaticResource WarningBrush}" /></DataTrigger></Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+
+            <StackPanel Visibility="{Binding HasResults, Converter={StaticResource BoolToVisibility}}">
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <DockPanel Margin="0,0,0,6">
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                <Button Style="{StaticResource GhostButton}" Content="Raw CSV" Command="{Binding ExportRawCsvCommand}" Margin="0,0,8,0" />
+                                <Button Style="{StaticResource GhostButton}" Content="Summary CSV" Command="{Binding ExportSummaryCsvCommand}" Margin="0,0,8,0" />
+                                <Button Style="{StaticResource GhostButton}" Content="JSON" Command="{Binding ExportJsonCommand}" Margin="0,0,8,0" />
+                                <Button Style="{StaticResource PrimaryButton}" Content="Switch to fastest..." Command="{Binding ApplyFastestCommand}" ToolTip="Opens the review dialog for the top-ranked server's addresses." />
+                            </StackPanel>
+                            <TextBlock Text="RESULTS" Style="{StaticResource CardTitle}" Margin="0" VerticalAlignment="Center" />
+                        </DockPanel>
+                        <TextBlock Text="{Binding ResultSubtitle}" Style="{StaticResource MutedText}" TextWrapping="Wrap" />
+                        <Border Background="#1F3347" CornerRadius="8" Padding="12,9" Margin="0,12,0,12">
+                            <TextBlock Text="{Binding Conclusion}" TextWrapping="Wrap" />
+                        </Border>
+                        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                            <StackPanel MinWidth="900">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="44" />
+                        <ColumnDefinition Width="*" MinWidth="200" />
+                        <ColumnDefinition Width="66" />
+                        <ColumnDefinition Width="58" />
+                        <ColumnDefinition Width="54" />
+                        <ColumnDefinition Width="54" />
+                        <ColumnDefinition Width="54" />
+                        <ColumnDefinition Width="62" />
+                        <ColumnDefinition Width="52" />
+                        <ColumnDefinition Width="52" />
+                        <ColumnDefinition Width="50" />
+                        <ColumnDefinition Width="92" />
+                                    </Grid.ColumnDefinitions>
+                                    <Button Grid.Column="0" Style="{StaticResource TableHeaderButton}" Content="#" Command="{Binding DataContext.SortCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="Rank" HorizontalContentAlignment="Left" />
+                    <Button Grid.Column="1" Style="{StaticResource TableHeaderButton}" Content="SERVER" Command="{Binding DataContext.SortCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="Name" HorizontalContentAlignment="Left" />
+                    <Button Grid.Column="2" Style="{StaticResource TableHeaderButton}" Content="MEDIAN" Command="{Binding DataContext.SortCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="Median" HorizontalContentAlignment="Right" />
+                    <Button Grid.Column="3" Style="{StaticResource TableHeaderButton}" Content="AVG" Command="{Binding DataContext.SortCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="Mean" HorizontalContentAlignment="Right" />
+                    <Button Grid.Column="4" Style="{StaticResource TableHeaderButton}" Content="MIN" Command="{Binding DataContext.SortCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="Min" HorizontalContentAlignment="Right" />
+                    <Button Grid.Column="5" Style="{StaticResource TableHeaderButton}" Content="MAX" Command="{Binding DataContext.SortCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="Max" HorizontalContentAlignment="Right" />
+                    <Button Grid.Column="6" Style="{StaticResource TableHeaderButton}" Content="P95" Command="{Binding DataContext.SortCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="P95" HorizontalContentAlignment="Right" />
+                    <Button Grid.Column="7" Style="{StaticResource TableHeaderButton}" Content="STDDEV" Command="{Binding DataContext.SortCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="StdDev" HorizontalContentAlignment="Right" />
+                    <Button Grid.Column="8" Style="{StaticResource TableHeaderButton}" Content="OK" Command="{Binding DataContext.SortCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="Success" HorizontalContentAlignment="Right" />
+                    <Button Grid.Column="9" Style="{StaticResource TableHeaderButton}" Content="T/O" Command="{Binding DataContext.SortCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="Timeouts" HorizontalContentAlignment="Right" />
+                                </Grid>
+                                <Border Height="1" Background="{StaticResource BorderBrush}" />
+                                <ItemsControl ItemsSource="{Binding Rows}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel>
+                                                <Grid Margin="0,8,0,2">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="44" />
+                        <ColumnDefinition Width="*" MinWidth="200" />
+                        <ColumnDefinition Width="66" />
+                        <ColumnDefinition Width="58" />
+                        <ColumnDefinition Width="54" />
+                        <ColumnDefinition Width="54" />
+                        <ColumnDefinition Width="54" />
+                        <ColumnDefinition Width="62" />
+                        <ColumnDefinition Width="52" />
+                        <ColumnDefinition Width="52" />
+                        <ColumnDefinition Width="50" />
+                        <ColumnDefinition Width="92" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Text="{Binding RankText}" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" />
+                                                    <StackPanel Grid.Column="1">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <Ellipse Width="8" Height="8" Fill="{Binding Brush}" Margin="0,0,8,0" />
+                                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                                        </StackPanel>
+                                                        <TextBlock Text="{Binding Detail}" Style="{StaticResource MutedText}" FontFamily="Consolas" TextTrimming="CharacterEllipsis" />
+                                                    </StackPanel>
+                                                    <TextBlock Grid.Column="2" Text="{Binding MedianText}" FontWeight="SemiBold" TextAlignment="Right" />
+                                                    <TextBlock Grid.Column="3" Text="{Binding MeanText}" TextAlignment="Right" />
+                                                    <TextBlock Grid.Column="4" Text="{Binding MinText}" TextAlignment="Right" />
+                                                    <TextBlock Grid.Column="5" Text="{Binding MaxText}" TextAlignment="Right" />
+                                                    <TextBlock Grid.Column="6" Text="{Binding P95Text}" TextAlignment="Right" />
+                                                    <TextBlock Grid.Column="7" Text="{Binding StdDevText}" TextAlignment="Right" />
+                                                    <TextBlock Grid.Column="8" Text="{Binding SuccessText}" TextAlignment="Right" />
+                                                    <TextBlock Grid.Column="9" Text="{Binding TimeoutText}" TextAlignment="Right" />
+                                                    <Button Grid.Column="11" Style="{StaticResource GhostButton}" Content="Use..." Padding="10,3" FontSize="12" Visibility="{Binding CanApply, Converter={StaticResource BoolToVisibility}}"
+                                                            Command="{Binding DataContext.ApplyRowCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+                                                </Grid>
+                                                <TextBlock Text="{Binding Notes}" Style="{StaticResource MutedText}" Foreground="{StaticResource WarningBrush}" Margin="52,0,0,6" Visibility="{Binding Notes, Converter={StaticResource EmptyToCollapsed}}" />
+                                                <Border Height="1" Background="#222C3C" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </ScrollViewer>
+                        <TextBlock Text="{Binding SortLabel}" Style="{StaticResource MutedText}" Margin="0,8,0,0" />
+                        <TextBlock Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,4,0,0"
+                                   Text="All times in milliseconds, computed from successful queries only. Failed and timed-out queries lower the OK % instead. Percentiles use linear interpolation; STDDEV is the sample standard deviation. Servers answering fewer than half their queries are not ranked." />
+                    </StackPanel>
+                </Border>
+
+                <c:AdaptiveGrid MinColumnWidth="480">
+                    <Border Style="{StaticResource CardStyle}">
+                        <StackPanel>
+                            <TextBlock Text="AVERAGE LATENCY (ms) - lower is better" Style="{StaticResource CardTitle}" />
+                            <ItemsControl ItemsSource="{Binding Rows}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,0,0,8" ToolTip="{Binding Detail}">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="140" /><ColumnDefinition Width="*" /><ColumnDefinition Width="64" /></Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding Label}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" ToolTip="{Binding Label}" />
+                                            <c:FillBar Grid.Column="1" Height="14" Fraction="{Binding MeanFraction}" Fill="{Binding Brush}" />
+                                            <TextBlock Grid.Column="2" Text="{Binding MeanText}" TextAlignment="Right" FontWeight="SemiBold" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource CardStyle}">
+                        <StackPanel>
+                            <TextBlock Text="MIN / MEDIAN / MAX (bar = range, line = median, dot = average)" Style="{StaticResource CardTitle}" />
+                            <ItemsControl ItemsSource="{Binding Rows}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,0,0,8" ToolTip="{Binding RangeText}">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="140" /><ColumnDefinition Width="*" /><ColumnDefinition Width="150" /></Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding Label}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" ToolTip="{Binding Label}" />
+                                            <c:RangeBar Grid.Column="1" Height="18" Min="{Binding Min}" Max="{Binding Max}" Median="{Binding Median}" Mean="{Binding Mean}" AxisMax="{Binding AxisMax}" Fill="{Binding Brush}" />
+                                            <TextBlock Grid.Column="2" Text="{Binding RangeText}" TextAlignment="Right" Style="{StaticResource MutedText}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource CardStyle}">
+                        <StackPanel>
+                            <TextBlock Text="RELIABILITY (queries answered successfully)" Style="{StaticResource CardTitle}" />
+                            <ItemsControl ItemsSource="{Binding Rows}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,0,0,8">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="140" /><ColumnDefinition Width="*" /><ColumnDefinition Width="64" /></Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding Label}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" ToolTip="{Binding Label}" />
+                                            <c:FillBar Grid.Column="1" Height="14" Fraction="{Binding SuccessFraction}" Fill="{StaticResource SuccessBrush}" />
+                                            <TextBlock Grid.Column="2" Text="{Binding SuccessText}" TextAlignment="Right" FontWeight="SemiBold" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource CardStyle}">
+                        <StackPanel>
+                            <TextBlock Text="MEDIAN LATENCY OVER TIME (one point per run)" Style="{StaticResource CardTitle}" />
+                            <c:MultiLineChart Height="200" Series="{Binding HistorySeries}" />
+                            <ItemsControl ItemsSource="{Binding HistorySeries}" Margin="0,8,0,0">
+                                <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,14,4">
+                                            <Ellipse Width="8" Height="8" Fill="{Binding Brush}" Margin="0,0,6,0" />
+                                            <TextBlock Text="{Binding Name}" Style="{StaticResource MutedText}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+                </c:AdaptiveGrid>
+            </StackPanel>
+
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <TextBlock Text="HOW TO READ THESE NUMBERS" Style="{StaticResource CardTitle}" />
+                    <TextBlock Style="{StaticResource MutedText}" TextWrapping="Wrap" LineHeight="19" Foreground="{StaticResource TextBrush}">
+                        <Run Text="- This is DNS query response time, not ICMP ping." /><LineBreak />
+                        <Run Text="- Caching: Warm mode discards one warm-up query per server and domain, so results show cached-answer speed (mostly network distance). Cold mode asks for random non-existent sub-domains, forcing a real recursive lookup (NXDOMAIN counts as answered)." /><LineBreak />
+                        <Run Text="- Network conditions change from minute to minute: repeat the test at different times. A single run cannot prove a provider is objectively fastest; differences of a few milliseconds are noise." /><LineBreak />
+                        <Run Text="- Retries re-send only after a failure; the final outcome is what counts. Timeouts and failures are reported, never hidden." /><LineBreak />
+                        <Run Text="- DoH timings use a reused encrypted connection (handshake excluded) and the DoH host name is resolved by your current DNS. TCP and DoH are slower to set up than UDP by design." />
+                    </TextBlock>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
+

@@ -21,9 +21,13 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
     private readonly IApplyFlow _flow;
     private readonly DispatcherTimer _timer;
 
-    public DashboardViewModel(SystemStateService state, INavigationService nav, IDnsCacheService cache, IApplyFlow flow)
+    private readonly BenchmarkSession _session;
+
+    public DashboardViewModel(SystemStateService state, INavigationService nav, IDnsCacheService cache, IApplyFlow flow, BenchmarkSession session)
     {
         _state = state;
+        _session = session;
+        _session.PropertyChanged += OnStateChanged;
         _nav = nav;
         _cache = cache;
         _flow = flow;
@@ -100,6 +104,7 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
     {
         _timer.Stop();
         _state.PropertyChanged -= OnStateChanged;
+        _session.PropertyChanged -= OnStateChanged;
     }
 
     private void OnStateChanged(object? sender, PropertyChangedEventArgs e) => Rebuild();
@@ -156,13 +161,48 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
         if (_state.LatencyHistory.Count > 0)
         {
             var ok = valid.Count * 100.0 / _state.LatencyHistory.Count;
-            Availability = ok.ToString("F0", CultureInfo.InvariantCulture) + "% (this session)";
+            if (_session.LastRun is null)
+            {
+                Availability = ok.ToString("F0", CultureInfo.InvariantCulture) + "% (this session)";
+            }
+
             StatsSummary = valid.Count > 0
                 ? string.Create(CultureInfo.InvariantCulture, $"{_state.LatencyHistory.Count} sample(s) - min {valid.Min():F0} ms - avg {valid.Average():F0} ms - max {valid.Max():F0} ms")
                 : $"{_state.LatencyHistory.Count} sample(s) - all failed";
         }
 
+        ShowBenchmark(_session.LastRun);
         UpdatedText = _state.LastUpdated is { } t ? $"Updated {t:HH:mm:ss}" : "Not yet updated";
+    }
+
+    private void ShowBenchmark(DNSManagerPro.Core.Benchmark.BenchmarkRun? run)
+    {
+        if (run is null || run.Samples.Count == 0)
+        {
+            LastBenchmark = "No benchmark run yet";
+            FastestProvider = "-";
+            return;
+        }
+
+        var ranked = DNSManagerPro.Core.Benchmark.BenchmarkAnalysis.Rank(DNSManagerPro.Core.Benchmark.BenchmarkAnalysis.Summarize(run.Samples));
+        LastBenchmark = $"{run.StartedUtc.ToLocalTime():g} - {run.Samples.Count} queries";
+        var top = ranked.Where(r => r.Rank > 0).OrderBy(r => r.Rank).ToList();
+        if (top.Count == 0)
+        {
+            FastestProvider = "No server could be ranked";
+        }
+        else
+        {
+            var tied = top.Count > 1 && top[1].TiedWithPrevious;
+            FastestProvider = string.Create(CultureInfo.InvariantCulture, $"{top[0].Name} ({top[0].Stats!.Median:F0} ms median){(tied ? " - within noise of " + top[1].Name : string.Empty)}");
+        }
+
+        var current = ranked.FirstOrDefault(r => r.Name == "Current DNS");
+        var basis = current ?? ranked.OrderByDescending(r => r.Queries).FirstOrDefault();
+        if (basis is not null)
+        {
+            Availability = string.Create(CultureInfo.InvariantCulture, $"{basis.SuccessRate * 100:F1}% ({basis.Name}, last benchmark)");
+        }
     }
 
     private static string FormatSpeed(long bps) =>

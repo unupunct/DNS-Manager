@@ -52,10 +52,10 @@
                             <TextBlock Grid.Column="1" Text="{Binding LastBenchmark}" FontWeight="SemiBold" TextWrapping="Wrap" /></Grid>
                         <Grid Margin="0,0,0,9"><Grid.ColumnDefinitions><ColumnDefinition Width="116" /><ColumnDefinition /></Grid.ColumnDefinitions>
                             <TextBlock Text="Fastest provider" Foreground="{StaticResource TextMutedBrush}" FontSize="12.5" />
-                            <TextBlock Grid.Column="1" Text="{Binding FastestProvider}" FontWeight="SemiBold" /></Grid>
+                            <TextBlock Grid.Column="1" Text="{Binding FastestProvider}" FontWeight="SemiBold" TextWrapping="Wrap" /></Grid>
                         <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="116" /><ColumnDefinition /></Grid.ColumnDefinitions>
                             <TextBlock Text="Availability" Foreground="{StaticResource TextMutedBrush}" FontSize="12.5" />
-                            <TextBlock Grid.Column="1" Text="{Binding Availability}" FontWeight="SemiBold" /></Grid>
+                            <TextBlock Grid.Column="1" Text="{Binding Availability}" FontWeight="SemiBold" TextWrapping="Wrap" /></Grid>
                     </StackPanel>
                 </Border>
             </c:AdaptiveGrid>
@@ -104,6 +104,7 @@
         </StackPanel>
     </ScrollViewer>
 </UserControl>
+
 
 
 
