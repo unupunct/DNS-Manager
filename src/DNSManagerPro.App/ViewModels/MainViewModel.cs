@@ -8,15 +8,6 @@ namespace DNSManagerPro.App.ViewModels;
 
 public sealed record NavItem(NavSection Section, string Title, string Glyph);
 
-public sealed class PlaceholderViewModel(string title, string description, string phase)
-{
-    public string Title { get; } = title;
-
-    public string Description { get; } = description;
-
-    public string Phase { get; } = phase;
-}
-
 public sealed partial class MainViewModel : ObservableObject
 {
     private readonly IServiceProvider _services;
@@ -111,7 +102,7 @@ public sealed partial class MainViewModel : ObservableObject
         NavSection.Diagnostics => _services.GetRequiredService<DiagnosticsViewModel>(),
         NavSection.History => _services.GetRequiredService<HistoryViewModel>(),
         NavSection.Settings => _services.GetRequiredService<SettingsViewModel>(),
-        NavSection.About => new PlaceholderViewModel("About", "Version, licenses and project information.", "Phase 8"),
+        NavSection.About => _services.GetRequiredService<AboutViewModel>(),
         _ => throw new ArgumentOutOfRangeException(nameof(s)),
     };
 

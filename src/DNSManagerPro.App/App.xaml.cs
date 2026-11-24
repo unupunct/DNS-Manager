@@ -60,6 +60,7 @@ public partial class App : Application
         sc.AddSingleton<SystemStateService>();
         sc.AddSingleton<INavigationService, NavigationService>();
         sc.AddTransient<DashboardViewModel>();
+        sc.AddSingleton<AboutViewModel>();
         sc.AddSingleton<ProvidersViewModel>();
         sc.AddSingleton<AdaptersViewModel>();
         sc.AddSingleton<BenchmarkViewModel>();

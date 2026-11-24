@@ -19,6 +19,13 @@
     <TargetFramework>net10.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
+    <AssemblyName>DNSManagerPro</AssemblyName>
+    <RootNamespace>DNSManagerPro.App</RootNamespace>
+    <ApplicationIcon>..\..\assets\app.ico</ApplicationIcon>
+    <AssemblyTitle>DNS Manager Pro</AssemblyTitle>
+    <Description>Switch, benchmark and troubleshoot DNS on Windows. Local only, no telemetry.</Description>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

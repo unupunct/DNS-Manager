@@ -1,0 +1,63 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+  <Package Name="DNS Manager Pro"
+           Manufacturer="unupunct"
+           Version="$(var.ProductVersion)"
+           UpgradeCode="D9696416-0BD6-43A0-B847-D97D54D6C298"
+           Scope="perMachine"
+           Compressed="yes">
+
+    <SummaryInformation Description="DNS Manager Pro installer" />
+    <MajorUpgrade DowngradeErrorMessage="A newer version of DNS Manager Pro is already installed." />
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <Icon Id="AppIcon.ico" SourceFile="$(var.IconFile)" />
+    <Property Id="ARPPRODUCTICON" Value="AppIcon.ico" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/unupunct/DNS-Manager" />
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+
+    <!-- Windows 10 or later, 64-bit. -->
+    <Launch Condition="VersionNT64 &gt;= 600" Message="DNS Manager Pro needs a 64-bit version of Windows 10 or 11." />
+
+    <WixVariable Id="WixUILicenseRtf" Value="$(var.LicenseRtf)" />
+
+    <Feature Id="Main" Title="DNS Manager Pro" Description="The application and a Start Menu shortcut." Level="1" AllowAbsent="no" Display="expand">
+      <ComponentGroupRef Id="AppFiles" />
+      <ComponentRef Id="StartMenuShortcut" />
+      <ComponentRef Id="CleanupStartup" />
+      <Feature Id="DesktopShortcutFeature" Title="Desktop shortcut" Description="Adds a DNS Manager Pro shortcut to the desktop." Level="1000" AllowAbsent="yes">
+        <ComponentRef Id="DesktopShortcut" />
+      </Feature>
+    </Feature>
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="DNS Manager Pro" />
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Component Id="StartMenuShortcut" Guid="*">
+        <Shortcut Id="StartMenuShortcutItem" Name="DNS Manager Pro" Target="[INSTALLFOLDER]DNSManagerPro.exe"
+                  WorkingDirectory="INSTALLFOLDER" Description="Switch, benchmark and troubleshoot DNS" />
+        <RegistryValue Root="HKLM" Key="Software\DNSManagerPro" Name="StartMenuShortcut" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </StandardDirectory>
+
+    <StandardDirectory Id="DesktopFolder">
+      <Component Id="DesktopShortcut" Guid="*">
+        <Shortcut Id="DesktopShortcutItem" Name="DNS Manager Pro" Target="[INSTALLFOLDER]DNSManagerPro.exe"
+                  WorkingDirectory="INSTALLFOLDER" Description="Switch, benchmark and troubleshoot DNS" />
+        <RegistryValue Root="HKLM" Key="Software\DNSManagerPro" Name="DesktopShortcut" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </StandardDirectory>
+
+    <!-- Removes the per-user "start with Windows" entry of the user who uninstalls.
+         The database, settings and logs in %LocalAppData%\DNSManagerPro are deliberately NOT touched: they are user data. -->
+    <DirectoryRef Id="INSTALLFOLDER">
+      <Component Id="CleanupStartup" Guid="*">
+        <RegistryValue Root="HKLM" Key="Software\DNSManagerPro" Name="Installed" Type="integer" Value="1" KeyPath="yes" />
+        <RemoveRegistryValue Root="HKCU" Key="Software\Microsoft\Windows\CurrentVersion\Run" Name="DNSManagerPro" />
+      </Component>
+    </DirectoryRef>
+
+    <ui:WixUI Id="WixUI_FeatureTree" />
+  </Package>
+</Wix>

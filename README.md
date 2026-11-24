@@ -2,7 +2,7 @@
 
 Windows desktop app (WPF, .NET 10) to switch DNS providers, benchmark resolvers, manage custom DNS profiles and troubleshoot DNS. Local-only: no account, no telemetry, no cloud.
 
-> Status: **Phase 7 of 8 complete** (shell, dashboard, provider library, adapter manager, safe DNS apply, benchmark, custom DNS and profiles, diagnostics, history, monitoring, settings, data backup/restore). Applying DNS, benchmarking, profiles, diagnostics, history and settings are in later phases - see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+> Status: **v1.0.0, all 8 phases complete.** Installer (MSI) and portable zip are built by `scripts/build-release.ps1`. See [Installation](docs/INSTALLATION.md), [User guide](docs/USER_GUIDE.md), [Security](docs/SECURITY.md) and [Architecture](docs/ARCHITECTURE.md).
 
 ## Build and run
 
@@ -38,9 +38,19 @@ dotnet run --project src/DNSManagerPro.App
 - **History**: one timeline of DNS configuration changes (before/after, including failed and rolled-back ones), benchmarks, diagnostics and monitoring events; filter by type, time window or failures only, search, select and delete, export CSV/JSON.
 - **Monitoring** (optional, off by default): every 1-60 minutes it reads the adapter's DNS settings and sends one DNS query. Reports changes made outside the app, resolution failures (after two in a row, to ignore packet loss) and recovery, once per transition, with optional desktop notifications. Changes made by the app itself are not reported as outside changes.
 
-The dashboard's "last benchmark" fields stay empty until the benchmark engine ships (Phase 4).
 
 
 
 
 
+
+## Documentation
+
+- [Installation](docs/INSTALLATION.md) - installer, portable zip, uninstalling, building from source
+- [User guide](docs/USER_GUIDE.md)
+- [Security and privacy](docs/SECURITY.md)
+- [Architecture](docs/ARCHITECTURE.md)
+
+## License
+
+MIT, see [LICENSE](LICENSE).
