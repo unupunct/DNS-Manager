@@ -11,6 +11,8 @@ using DNSManagerPro.App.Services;
 using DNSManagerPro.Core.Abstractions;
 using DNSManagerPro.Core.Benchmark;
 using DNSManagerPro.Core.Providers;
+using DNSManagerPro.Core.Settings;
+using DNSManagerPro.Infrastructure;
 using CacheMode = DNSManagerPro.Core.Benchmark.CacheMode;
 using Microsoft.Extensions.Logging;
 
@@ -124,6 +126,8 @@ public sealed partial class BenchmarkViewModel : ObservableObject, IDisposable
     private readonly IApplyFlow _flow;
     private readonly IDialogService _dialogs;
     private readonly ILogger<BenchmarkViewModel> _log;
+    private readonly SettingsService _settings;
+    private AppSettings _appliedDefaults;
     private CancellationTokenSource? _cts;
     private List<DnsProvider> _providerCache = [];
     private string _sortKey = "Rank";
@@ -131,7 +135,7 @@ public sealed partial class BenchmarkViewModel : ObservableObject, IDisposable
 
     public BenchmarkViewModel(
         BenchmarkRunner runner, BenchmarkSession session, IProviderRepository providers, SystemStateService state,
-        IApplyFlow flow, IDialogService dialogs, ILogger<BenchmarkViewModel> log)
+        IApplyFlow flow, IDialogService dialogs, SettingsService settings, ILogger<BenchmarkViewModel> log)
     {
         _runner = runner;
         _session = session;
@@ -140,7 +144,13 @@ public sealed partial class BenchmarkViewModel : ObservableObject, IDisposable
         _flow = flow;
         _dialogs = dialogs;
         _log = log;
-        _domainsText = string.Join(", ", BenchmarkOptions.Default.Domains);
+        _settings = settings;
+        _appliedDefaults = settings.Current;
+        _domainsText = string.Join(", ", settings.Current.BenchmarkDomains);
+        _repetitionsText = settings.Current.BenchmarkRepetitions.ToString(CultureInfo.InvariantCulture);
+        _timeoutText = settings.Current.BenchmarkTimeoutMs.ToString(CultureInfo.InvariantCulture);
+        _parallelText = settings.Current.BenchmarkParallelism.ToString(CultureInfo.InvariantCulture);
+        _settings.Changed += OnSettingsChanged;
         _session.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName is nameof(BenchmarkSession.LastRun) or nameof(BenchmarkSession.History) && !IsRunning)
@@ -151,7 +161,42 @@ public sealed partial class BenchmarkViewModel : ObservableObject, IDisposable
         _ = InitAsync();
     }
 
-    public void Dispose() => _cts?.Dispose();
+    public void Dispose()
+    {
+        _settings.Changed -= OnSettingsChanged;
+        _cts?.Dispose();
+    }
+
+    /// <summary>When the user changes the benchmark defaults in Settings, the form follows (only fields whose default changed).</summary>
+    private void OnSettingsChanged(AppSettings s)
+    {
+        var old = _appliedDefaults;
+        _appliedDefaults = s;
+        if (IsRunning)
+        {
+            return;
+        }
+
+        if (!old.BenchmarkDomains.SequenceEqual(s.BenchmarkDomains))
+        {
+            DomainsText = string.Join(", ", s.BenchmarkDomains);
+        }
+
+        if (old.BenchmarkRepetitions != s.BenchmarkRepetitions)
+        {
+            RepetitionsText = s.BenchmarkRepetitions.ToString(CultureInfo.InvariantCulture);
+        }
+
+        if (old.BenchmarkTimeoutMs != s.BenchmarkTimeoutMs)
+        {
+            TimeoutText = s.BenchmarkTimeoutMs.ToString(CultureInfo.InvariantCulture);
+        }
+
+        if (old.BenchmarkParallelism != s.BenchmarkParallelism)
+        {
+            ParallelText = s.BenchmarkParallelism.ToString(CultureInfo.InvariantCulture);
+        }
+    }
 
     public ObservableCollection<BenchTargetItem> Targets { get; } = [];
 

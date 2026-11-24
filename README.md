@@ -2,7 +2,7 @@
 
 Windows desktop app (WPF, .NET 10) to switch DNS providers, benchmark resolvers, manage custom DNS profiles and troubleshoot DNS. Local-only: no account, no telemetry, no cloud.
 
-> Status: **Phase 6 of 8 complete** (shell, dashboard, provider library, adapter manager, safe DNS apply, benchmark, custom DNS and profiles, diagnostics, history, monitoring). Applying DNS, benchmarking, profiles, diagnostics, history and settings are in later phases - see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+> Status: **Phase 7 of 8 complete** (shell, dashboard, provider library, adapter manager, safe DNS apply, benchmark, custom DNS and profiles, diagnostics, history, monitoring, settings, data backup/restore). Applying DNS, benchmarking, profiles, diagnostics, history and settings are in later phases - see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Build and run
 

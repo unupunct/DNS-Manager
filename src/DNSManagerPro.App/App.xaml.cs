@@ -52,6 +52,9 @@ public partial class App : Application
         sc.AddSingleton<ITimelineRepository, DNSManagerPro.Data.SqliteTimelineRepository>();
         sc.AddSingleton<DNSManagerPro.Core.Diagnostics.DiagnosticsWorkflow>();
         sc.AddSingleton(sp => new SettingsService(AppPaths.SettingsFile, sp.GetRequiredService<ILogger<SettingsService>>()));
+        sc.AddSingleton<IStartupRegistration, StartupRegistration>();
+        sc.AddSingleton(sp => new DNSManagerPro.Data.DatabaseMaintenance(
+            sp.GetRequiredService<DNSManagerPro.Data.SqliteDatabase>(), AppPaths.Database, sp.GetRequiredService<ILogger<DNSManagerPro.Data.DatabaseMaintenance>>()));
         sc.AddSingleton<INotifier, TrayNotifier>();
         sc.AddSingleton<MonitorService>();
         sc.AddSingleton<SystemStateService>();
@@ -64,6 +67,7 @@ public partial class App : Application
         sc.AddSingleton<CustomDnsViewModel>();
         sc.AddSingleton<DiagnosticsViewModel>();
         sc.AddSingleton<HistoryViewModel>();
+        sc.AddSingleton<SettingsViewModel>();
         sc.AddSingleton<MainViewModel>();
         sc.AddSingleton<MainWindow>();
         _services = sc.BuildServiceProvider();
@@ -96,13 +100,22 @@ public partial class App : Application
         _services.GetRequiredService<SettingsService>().Load();
         _services.GetRequiredService<MonitorService>().Start();
         _ = _services.GetRequiredService<BenchmarkSession>().LoadAsync();
-        _services.GetRequiredService<MainWindow>().Show();
-        if (e.Args.Length > 0)
+        var settings = _services.GetRequiredService<SettingsService>().Current;
+        var window = _services.GetRequiredService<MainWindow>();
+        var minimized = settings.LaunchMinimized || e.Args.Contains(StartupRegistration.MinimizedArgument, StringComparer.Ordinal);
+        var intent = e.Args.Where(a => a != StartupRegistration.MinimizedArgument).ToArray();
+        if (intent.Length > 0)
+        {
+            minimized = false; // a user-requested action (for example after the UAC restart) must be visible
+        }
+
+        window.ShowStartup(minimized);
+        if (intent.Length > 0)
         {
             var flow = _services.GetRequiredService<IApplyFlow>();
             Dispatcher.BeginInvoke(
                 System.Windows.Threading.DispatcherPriority.ContextIdle,
-                new Action(async () => await flow.HandleStartupArgsAsync(e.Args)));
+                new Action(async () => await flow.HandleStartupArgsAsync(intent)));
         }
     }
 

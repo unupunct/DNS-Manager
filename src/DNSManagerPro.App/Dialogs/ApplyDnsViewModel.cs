@@ -8,6 +8,7 @@ using DNSManagerPro.Core.Abstractions;
 using DNSManagerPro.Core.Configuration;
 using DNSManagerPro.Core.Models;
 using DNSManagerPro.Core.Providers;
+using DNSManagerPro.Core.Settings;
 
 namespace DNSManagerPro.App.Dialogs;
 
@@ -20,6 +21,9 @@ public enum FamilyChoice
 
 /// <summary>What the dialog was opened for. Provider and Snapshot are both null for "restore automatic".</summary>
 public sealed record ApplyDnsRequest(string Title, string SourceName, DnsProvider? Provider, DnsSnapshot? Snapshot, string RestartArguments);
+
+/// <summary>User preferences that shape the dialog's defaults. The preview is shown regardless.</summary>
+public sealed record ApplyDnsOptions(bool RequireConfirmation = false, bool PreferEncryptedDns = false, Ipv6Preference Ipv6 = Ipv6Preference.Auto);
 
 /// <summary>One selectable adapter. Nothing is checked unless the user (or the preselected adapter) says so.</summary>
 public sealed partial class AdapterChoice(NetworkAdapterInfo adapter, bool isChecked) : ObservableObject
@@ -37,6 +41,7 @@ public sealed partial class ApplyDnsViewModel : ObservableObject
     private readonly IElevationService _elevation;
     private readonly IEncryptedDnsService? _encrypted;
     private readonly bool _elevated;
+    private readonly ApplyDnsOptions _options;
 
     public ApplyDnsViewModel(
         ApplyDnsRequest request,
@@ -45,8 +50,10 @@ public sealed partial class ApplyDnsViewModel : ObservableObject
         DnsChangeService service,
         IElevationService elevation,
         bool isElevated,
-        IEncryptedDnsService? encrypted = null)
+        IEncryptedDnsService? encrypted = null,
+        ApplyDnsOptions? options = null)
     {
+        _options = options ?? new ApplyDnsOptions();
         _request = request;
         _service = service;
         _elevation = elevation;
@@ -71,11 +78,16 @@ public sealed partial class ApplyDnsViewModel : ObservableObject
         _choiceV6 = !hasSource ? FamilyChoice.Automatic : HasSourceV6 ? FamilyChoice.Source : FamilyChoice.Unchanged;
 
         // Don't touch IPv6 by default when no selected adapter has IPv6; the user can still opt in.
-        if (_choiceV6 == FamilyChoice.Source && request.Snapshot is null
-            && Checked.All(a => a.IPv6Addresses.Count == 0 && a.Dns.IPv6Servers.Count == 0))
+        if (_choiceV6 == FamilyChoice.Source && request.Snapshot is null)
         {
-            _choiceV6 = FamilyChoice.Unchanged;
+            var noIpv6 = Checked.All(a => a.IPv6Addresses.Count == 0 && a.Dns.IPv6Servers.Count == 0);
+            if (_options.Ipv6 == Ipv6Preference.Never || (_options.Ipv6 == Ipv6Preference.Auto && noIpv6))
+            {
+                _choiceV6 = FamilyChoice.Unchanged;
+            }
         }
+
+        _enableDoh = _options.PreferEncryptedDns && ShowDohOption;
 
         Recompute();
     }
@@ -145,7 +157,16 @@ public sealed partial class ApplyDnsViewModel : ObservableObject
 
     public bool CanEdit => !IsBusy && !IsDone;
 
-    public string PrimaryText => NeedsElevation ? "Restart as administrator" : "Apply changes";
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PrimaryText))]
+    [NotifyPropertyChangedFor(nameof(ShowConfirmHint))]
+    private bool _isArmed;
+
+    public string PrimaryText => NeedsElevation
+        ? "Restart as administrator"
+        : IsArmed ? "Yes, apply these changes" : _options.RequireConfirmation ? "Review and apply" : "Apply changes";
+
+    public bool ShowConfirmHint => IsArmed;
 
     partial void OnChoiceV4Changed(FamilyChoice value) => Recompute();
 
@@ -186,6 +207,7 @@ public sealed partial class ApplyDnsViewModel : ObservableObject
 
     private void Recompute()
     {
+        IsArmed = false; // any change to the selection invalidates a pending confirmation
         Preview.Clear();
         Warnings.Clear();
         Problems.Clear();
@@ -258,6 +280,14 @@ public sealed partial class ApplyDnsViewModel : ObservableObject
             return;
         }
 
+        if (_options.RequireConfirmation && !IsArmed)
+        {
+            IsArmed = true; // first click only arms; the user re-reads the preview and confirms explicitly
+            return;
+        }
+
+        IsArmed = false;
+        OnPropertyChanged(nameof(ShowConfirmHint));
         IsBusy = true;
         PrimaryCommand.NotifyCanExecuteChanged();
         Steps.Clear();

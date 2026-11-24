@@ -110,7 +110,7 @@ public sealed partial class MainViewModel : ObservableObject
         NavSection.Profiles => _services.GetRequiredService<ProfilesViewModel>(),
         NavSection.Diagnostics => _services.GetRequiredService<DiagnosticsViewModel>(),
         NavSection.History => _services.GetRequiredService<HistoryViewModel>(),
-        NavSection.Settings => new PlaceholderViewModel("Settings", "General, benchmark, monitoring, network and data options.", "Phase 7"),
+        NavSection.Settings => _services.GetRequiredService<SettingsViewModel>(),
         NavSection.About => new PlaceholderViewModel("About", "Version, licenses and project information.", "Phase 8"),
         _ => throw new ArgumentOutOfRangeException(nameof(s)),
     };

@@ -94,6 +94,10 @@
                     <ItemsControl.ItemTemplate><DataTemplate><TextBlock Text="{Binding}" Foreground="{StaticResource ErrorBrush}" TextWrapping="Wrap" Margin="0,0,0,4" /></DataTemplate></ItemsControl.ItemTemplate>
                 </ItemsControl>
 
+                <TextBlock Text="Check the preview above. Click the button again to apply, or change the selection to cancel."
+                           Visibility="{Binding ShowConfirmHint, Converter={StaticResource BoolToVisibility}}"
+                           Foreground="{StaticResource AccentBrush}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,12,0,0" />
+
                 <ItemsControl ItemsSource="{Binding Steps}" Margin="0,14,0,0">
                     <ItemsControl.ItemTemplate><DataTemplate><TextBlock Text="{Binding Path=., StringFormat='  {0}'}" FontFamily="Consolas" FontSize="12" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" /></DataTemplate></ItemsControl.ItemTemplate>
                 </ItemsControl>

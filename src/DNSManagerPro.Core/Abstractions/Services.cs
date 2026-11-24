@@ -29,3 +29,11 @@ public interface IDnsProbe
         TimeSpan timeout,
         CancellationToken cancellationToken = default);
 }
+
+/// <summary>Per-user automatic start with Windows.</summary>
+public interface IStartupRegistration
+{
+    bool IsEnabled();
+
+    void Configure(bool enabled, bool minimized);
+}

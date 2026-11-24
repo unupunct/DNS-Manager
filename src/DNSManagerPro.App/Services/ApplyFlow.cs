@@ -3,6 +3,7 @@ using DNSManagerPro.Core.Abstractions;
 using DNSManagerPro.Core.Configuration;
 using DNSManagerPro.Core.Profiles;
 using DNSManagerPro.Core.Providers;
+using DNSManagerPro.Infrastructure;
 using Microsoft.Extensions.Logging;
 
 namespace DNSManagerPro.App.Services;
@@ -35,6 +36,7 @@ public sealed class ApplyFlow(
     IProviderRepository providers,
     ProfileService profiles,
     INavigationService nav,
+    SettingsService settings,
     ILogger<ApplyFlow> logger) : IApplyFlow
 {
     public const string ArgProvider = "--apply-provider";
@@ -135,7 +137,9 @@ public sealed class ApplyFlow(
 
     private async Task<bool> ShowAsync(ApplyDnsRequest request, string? adapterId)
     {
-        var vm = new ApplyDnsViewModel(request, state.Adapters, adapterId ?? state.ActiveAdapter?.Id, service, elevation, privilege.IsElevated, encrypted);
+        var s = settings.Current;
+        var options = new ApplyDnsOptions(s.ConfirmDnsChanges, s.PreferEncryptedDns, s.Ipv6Handling);
+        var vm = new ApplyDnsViewModel(request, state.Adapters, adapterId ?? s.DefaultAdapterId ?? state.ActiveAdapter?.Id, service, elevation, privilege.IsElevated, encrypted, options);
         dialogs.ShowApply(vm);
         state.MarkAppChange();
         await state.RefreshAsync(true); // always re-read: reflects both success and rollback

@@ -1,0 +1,132 @@
+<UserControl x:Class="DNSManagerPro.App.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.RenderTransform><TranslateTransform /></UserControl.RenderTransform>
+    <UserControl.Triggers>
+        <EventTrigger RoutedEvent="Loaded">
+            <BeginStoryboard>
+                <Storyboard>
+                    <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.3" />
+                    <DoubleAnimation Storyboard.TargetProperty="RenderTransform.(TranslateTransform.Y)" From="14" To="0" Duration="0:0:0.3" />
+                </Storyboard>
+            </BeginStoryboard>
+        </EventTrigger>
+    </UserControl.Triggers>
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="32,26,16,24" MaxWidth="900" HorizontalAlignment="Left">
+            <StackPanel Margin="0,0,16,14">
+                <TextBlock Text="Settings" Style="{StaticResource PageTitle}" />
+                <TextBlock Text="Changes are saved immediately, except benchmark defaults which have a Save button." Style="{StaticResource MutedText}" Margin="0,2,0,0" />
+            </StackPanel>
+
+            <!-- GENERAL -->
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <TextBlock Text="GENERAL" Style="{StaticResource CardTitle}" />
+                    <CheckBox Content="Start DNS Manager Pro when I sign in to Windows" IsChecked="{Binding StartWithWindows}" />
+                    <TextBlock Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="26,2,0,10"
+                               Text="Adds a per-user startup entry (no administrator rights needed). Changing DNS still asks for administrator permission when you apply." />
+                    <CheckBox Content="Start minimized" IsChecked="{Binding LaunchMinimized}" Margin="0,0,0,10" />
+                    <CheckBox Content="Minimize to the notification area (tray) instead of the taskbar" IsChecked="{Binding MinimizeToTray}" Margin="0,0,0,10" />
+                    <CheckBox Content="Ask for a second confirmation before changing DNS (recommended)" IsChecked="{Binding ConfirmDnsChanges}" />
+                    <TextBlock Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="26,2,0,10"
+                               Text="The preview of exactly what will change is always shown. With this on, you must click once more to apply." />
+                    <TextBlock Style="{StaticResource MutedText}" Text="Theme: dark (the only theme in this version)." />
+                    <TextBlock Text="{Binding GeneralMessage}" Foreground="{StaticResource ErrorBrush}" TextWrapping="Wrap" Margin="0,10,0,0"
+                               Visibility="{Binding GeneralMessage, Converter={StaticResource NullToCollapsed}}" />
+                </StackPanel>
+            </Border>
+
+            <!-- BENCHMARK -->
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <TextBlock Text="BENCHMARK DEFAULTS" Style="{StaticResource CardTitle}" />
+                    <TextBlock Text="Domains (comma or space separated, up to 20)" Style="{StaticResource MutedText}" Margin="0,0,0,4" />
+                    <TextBox Text="{Binding DomainsText, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap" AcceptsReturn="True" MinHeight="54" />
+                    <UniformGrid Columns="3" Margin="0,12,0,0">
+                        <StackPanel Margin="0,0,8,0"><TextBlock Text="Repetitions (1-100)" Style="{StaticResource MutedText}" Margin="0,0,0,4" /><TextBox Text="{Binding RepetitionsText, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+                        <StackPanel Margin="0,0,8,0"><TextBlock Text="Timeout ms (200-10000)" Style="{StaticResource MutedText}" Margin="0,0,0,4" /><TextBox Text="{Binding TimeoutText, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+                        <StackPanel><TextBlock Text="Parallel queries (1-16)" Style="{StaticResource MutedText}" Margin="0,0,0,4" /><TextBox Text="{Binding ParallelText, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+                    </UniformGrid>
+                    <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                        <Button Style="{StaticResource PrimaryButton}" Content="Save defaults" Command="{Binding SaveBenchmarkCommand}" Margin="0,0,8,0" />
+                        <Button Style="{StaticResource GhostButton}" Content="Restore built-in defaults" Command="{Binding ResetBenchmarkCommand}" />
+                    </StackPanel>
+                    <TextBlock Text="{Binding BenchmarkMessage}" TextWrapping="Wrap" Margin="0,10,0,0" Visibility="{Binding BenchmarkMessage, Converter={StaticResource NullToCollapsed}}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="{StaticResource SuccessBrush}" />
+                                <Style.Triggers><DataTrigger Binding="{Binding BenchmarkMessageIsError}" Value="True"><Setter Property="Foreground" Value="{StaticResource ErrorBrush}" /></DataTrigger></Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
+            </Border>
+
+            <!-- MONITORING -->
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <TextBlock Text="MONITORING (optional, off by default)" Style="{StaticResource CardTitle}" />
+                    <CheckBox Content="Monitor DNS while the app is running" IsChecked="{Binding MonitorEnabled}" />
+                    <TextBlock Text="Check every" Style="{StaticResource MutedText}" Margin="0,12,0,4" />
+                    <ItemsControl ItemsSource="{Binding IntervalOptions}">
+                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate><DataTemplate><RadioButton GroupName="setinterval" Style="{StaticResource SegmentRadio}" Content="{Binding Label}" IsChecked="{Binding IsSelected, Mode=TwoWay}" /></DataTemplate></ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <CheckBox Content="Notify me when DNS settings change outside this app" IsChecked="{Binding NotifyChange}" Margin="0,14,0,6" />
+                    <CheckBox Content="Notify me when DNS resolution fails or recovers" IsChecked="{Binding NotifyFailure}" />
+                </StackPanel>
+            </Border>
+
+            <!-- NETWORK -->
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <TextBlock Text="NETWORK DEFAULTS" Style="{StaticResource CardTitle}" />
+                    <TextBlock Text="Adapter preselected when applying DNS" Style="{StaticResource MutedText}" Margin="0,0,0,4" />
+                    <ItemsControl ItemsSource="{Binding AdapterOptions}">
+                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate><DataTemplate><RadioButton GroupName="setadapter" Style="{StaticResource SegmentRadio}" Content="{Binding Label}" IsChecked="{Binding IsSelected, Mode=TwoWay}" /></DataTemplate></ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Text="IPv6 servers when applying a provider" Style="{StaticResource MutedText}" Margin="0,14,0,4" />
+                    <ItemsControl ItemsSource="{Binding Ipv6Options}">
+                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate><DataTemplate><RadioButton GroupName="setipv6" Style="{StaticResource SegmentRadio}" Content="{Binding Label}" IsChecked="{Binding IsSelected, Mode=TwoWay}" /></DataTemplate></ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,6,0,0"
+                               Text="Automatic changes IPv6 only when the selected adapter already uses IPv6. You can still adjust it in the apply dialog." />
+                    <CheckBox Content="Pre-select DNS-over-HTTPS when a provider supports it (Windows 11)" IsChecked="{Binding PreferEncryptedDns}" Margin="0,14,0,0" />
+                </StackPanel>
+            </Border>
+
+            <!-- DATA -->
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <TextBlock Text="DATA AND PRIVACY" Style="{StaticResource CardTitle}" />
+                    <TextBlock Style="{StaticResource MutedText}" TextWrapping="Wrap"
+                               Text="Everything is stored on this computer only. The app has no accounts, no telemetry and sends nothing anywhere except the DNS queries you ask it to make." />
+                    <TextBlock Text="{Binding DatabaseFile}" FontFamily="Consolas" FontSize="12" TextWrapping="Wrap" Margin="0,8,0,12" />
+                    <WrapPanel>
+                        <Button Style="{StaticResource GhostButton}" Content="Back up database..." Command="{Binding BackupDatabaseCommand}" Margin="0,0,8,8" />
+                        <Button Style="{StaticResource GhostButton}" Content="Restore database..." Command="{Binding RestoreDatabaseCommand}" Margin="0,0,8,8" />
+                        <Button Style="{StaticResource GhostButton}" Content="Export settings..." Command="{Binding ExportSettingsCommand}" Margin="0,0,8,8" />
+                        <Button Style="{StaticResource GhostButton}" Content="Import settings..." Command="{Binding ImportSettingsCommand}" Margin="0,0,8,8" />
+                        <Button Style="{StaticResource GhostButton}" Content="Open data folder" Command="{Binding OpenDataFolderCommand}" Margin="0,0,8,8" />
+                        <Button Style="{StaticResource GhostButton}" Content="Open log folder" Command="{Binding OpenLogFolderCommand}" Margin="0,0,8,8" />
+                    </WrapPanel>
+                    <WrapPanel Margin="0,4,0,0">
+                        <Button Style="{StaticResource DangerGhostButton}" Content="Clear history..." Command="{Binding ClearHistoryCommand}" Margin="0,0,8,0" />
+                        <Button Style="{StaticResource DangerGhostButton}" Content="Reset settings..." Command="{Binding ResetSettingsCommand}" />
+                    </WrapPanel>
+                    <TextBlock Text="{Binding DataMessage}" TextWrapping="Wrap" Margin="0,12,0,0" Visibility="{Binding DataMessage, Converter={StaticResource NullToCollapsed}}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="{StaticResource SuccessBrush}" />
+                                <Style.Triggers><DataTrigger Binding="{Binding DataMessageIsError}" Value="True"><Setter Property="Foreground" Value="{StaticResource ErrorBrush}" /></DataTrigger></Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

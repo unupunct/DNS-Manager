@@ -167,6 +167,7 @@ public sealed partial class DiagnosticsViewModel : ObservableObject, IDisposable
         _monitorEnabled = _settings.Current.MonitoringEnabled;
         _notifyChange = _settings.Current.NotifyOnChange;
         _notifyFailure = _settings.Current.NotifyOnFailure;
+        _settings.Changed += s => App_Dispatch(() => SyncFromSettings(s));
         _monitor.EventRaised += ev => App_Dispatch(() => _ = LoadMonitorEventsAsync());
         _monitor.StatusChanged += () => App_Dispatch(() => MonitorStatus = _monitor.LastStatus);
         MonitorStatus = _monitor.LastStatus;
@@ -285,6 +286,21 @@ public sealed partial class DiagnosticsViewModel : ObservableObject, IDisposable
     partial void OnNotifyChangeChanged(bool value) => _settings.Update(s => s with { NotifyOnChange = value });
 
     partial void OnNotifyFailureChanged(bool value) => _settings.Update(s => s with { NotifyOnFailure = value });
+
+    /// <summary>Keeps this tab in step when the same options are changed on the Settings page.</summary>
+    private void SyncFromSettings(DNSManagerPro.Core.Settings.AppSettings s)
+    {
+        MonitorEnabled = s.MonitoringEnabled;
+        NotifyChange = s.NotifyOnChange;
+        NotifyFailure = s.NotifyOnFailure;
+        foreach (var o in IntervalOptions)
+        {
+            if (o.Value == s.MonitoringIntervalMinutes.ToString(CultureInfo.InvariantCulture))
+            {
+                o.IsSelected = true;
+            }
+        }
+    }
 
     private void SetInterval(int minutes)
     {
