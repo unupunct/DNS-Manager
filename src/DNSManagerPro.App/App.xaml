@@ -16,6 +16,8 @@
             <conv:EnumToBoolConverter x:Key="EnumToBool" />
             <conv:InvertBoolConverter x:Key="InvertBool" />
             <conv:BoolToTitleConverter x:Key="BoolToTitle" />
+            <conv:ZeroToVisibleConverter x:Key="ZeroToVisible" />
+            <conv:PositiveToVisibleConverter x:Key="PositiveToVisible" />
             <conv:EmptyToCollapsedConverter x:Key="EmptyToCollapsed" />
             <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
 
@@ -42,6 +44,12 @@
             <DataTemplate DataType="{x:Type vm:CustomDnsViewModel}">
                 <views:CustomDnsView />
             </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:DiagnosticsViewModel}">
+                <views:DiagnosticsView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:HistoryViewModel}">
+                <views:HistoryView />
+            </DataTemplate>
             <DataTemplate DataType="{x:Type vm:AdaptersViewModel}">
                 <views:AdaptersView />
             </DataTemplate>
@@ -54,6 +62,8 @@
         </ResourceDictionary>
     </Application.Resources>
 </Application>
+
+
 
 
 

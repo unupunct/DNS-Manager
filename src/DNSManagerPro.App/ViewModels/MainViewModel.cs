@@ -108,8 +108,8 @@ public sealed partial class MainViewModel : ObservableObject
         NavSection.CustomDns => _services.GetRequiredService<CustomDnsViewModel>(),
         NavSection.Adapters => _services.GetRequiredService<AdaptersViewModel>(),
         NavSection.Profiles => _services.GetRequiredService<ProfilesViewModel>(),
-        NavSection.Diagnostics => new PlaceholderViewModel("DNS Diagnostics", "Lookups, record queries and an automated troubleshooting workflow.", "Phase 6"),
-        NavSection.History => new PlaceholderViewModel("History", "Timeline of DNS changes, benchmarks and diagnostics.", "Phase 6"),
+        NavSection.Diagnostics => _services.GetRequiredService<DiagnosticsViewModel>(),
+        NavSection.History => _services.GetRequiredService<HistoryViewModel>(),
         NavSection.Settings => new PlaceholderViewModel("Settings", "General, benchmark, monitoring, network and data options.", "Phase 7"),
         NavSection.About => new PlaceholderViewModel("About", "Version, licenses and project information.", "Phase 8"),
         _ => throw new ArgumentOutOfRangeException(nameof(s)),
@@ -125,6 +125,7 @@ public sealed partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(IsBusy));
     }
 }
+
 
 
 

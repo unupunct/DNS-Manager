@@ -2,7 +2,7 @@
 
 Windows desktop app (WPF, .NET 10) to switch DNS providers, benchmark resolvers, manage custom DNS profiles and troubleshoot DNS. Local-only: no account, no telemetry, no cloud.
 
-> Status: **Phase 5 of 8 complete** (shell, dashboard, provider library, adapter manager, safe DNS apply, benchmark, custom DNS and profiles). Applying DNS, benchmarking, profiles, diagnostics, history and settings are in later phases - see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+> Status: **Phase 6 of 8 complete** (shell, dashboard, provider library, adapter manager, safe DNS apply, benchmark, custom DNS and profiles, diagnostics, history, monitoring). Applying DNS, benchmarking, profiles, diagnostics, history and settings are in later phases - see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Build and run
 
@@ -34,7 +34,12 @@ dotnet run --project src/DNSManagerPro.App
 - **Apply to chosen adapters**: the review dialog lets you tick one or more adapters; each gets its own backup, verification and rollback, and unticked adapters are never touched.
 - **Encrypted DNS on Windows 11**: for providers/profiles with a DoH URL the dialog offers an optional step that registers it with Windows (`netsh dns add encryption`, auto-upgrade, plain-DNS fallback allowed). Windows has no setting for DoT or DoQ, so those endpoints are stored for reference only.
 
+- **DNS Diagnostics**: *Automated check* walks through connectivity, default gateway, each configured DNS server, Windows name resolution, comparison with public resolvers, analysis and a saveable report; findings separate **detected problems** (observed) from **possible causes** (not confirmed). *Lookup*: A, AAAA, MX, TXT, NS, CNAME, SOA and reverse (PTR) queries against your DNS, any provider or a custom server, with response time, response code, records and errors. *Propagation*: asks every resolver the same question and groups the answers (and explains that CDNs legitimately differ). *DNS cache*: inspect and flush the Windows cache (both need administrator rights; the app says so and offers a restart).
+- **History**: one timeline of DNS configuration changes (before/after, including failed and rolled-back ones), benchmarks, diagnostics and monitoring events; filter by type, time window or failures only, search, select and delete, export CSV/JSON.
+- **Monitoring** (optional, off by default): every 1-60 minutes it reads the adapter's DNS settings and sends one DNS query. Reports changes made outside the app, resolution failures (after two in a row, to ignore packet loss) and recovery, once per transition, with optional desktop notifications. Changes made by the app itself are not reported as outside changes.
+
 The dashboard's "last benchmark" fields stay empty until the benchmark engine ships (Phase 4).
+
 
 
 

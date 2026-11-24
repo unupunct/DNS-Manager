@@ -99,6 +99,26 @@ public sealed class SqliteDatabase(string path, ILogger<SqliteDatabase>? logger 
         CREATE INDEX IX_DNSProfiles_Name ON DNSProfiles (Name);
         CREATE INDEX IX_DNSProfiles_Provider ON DNSProfiles (ProviderId);
         """,
+        // v5: diagnostics and monitoring
+        """
+        CREATE TABLE DiagnosticRuns (
+            Id TEXT PRIMARY KEY NOT NULL,
+            StartedAt TEXT NOT NULL,
+            FinishedAt TEXT NOT NULL,
+            Overall TEXT NOT NULL,
+            Summary TEXT NOT NULL,
+            ReportText TEXT NOT NULL
+        );
+        CREATE INDEX IX_DiagnosticRuns_Started ON DiagnosticRuns (StartedAt);
+        CREATE TABLE MonitorEvents (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            Timestamp TEXT NOT NULL,
+            Kind TEXT NOT NULL,
+            Message TEXT NOT NULL,
+            Details TEXT
+        );
+        CREATE INDEX IX_MonitorEvents_Time ON MonitorEvents (Timestamp);
+        """,
     ];
 
     public static int LatestVersion => Migrations.Length;

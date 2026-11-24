@@ -55,6 +55,11 @@ public sealed partial class SystemStateService(
 
     public bool IsElevated => privilege.IsElevated;
 
+    /// <summary>When this app last attempted a DNS change; lets monitoring tell its own changes from outside ones.</summary>
+    public DateTime? LastAppChangeUtc { get; private set; }
+
+    public void MarkAppChange() => LastAppChangeUtc = DateTime.UtcNow;
+
     public DnsProvider? ActiveProvider
     {
         get
@@ -158,6 +163,7 @@ public sealed partial class SystemStateService(
         }
     }
 }
+
 
 
 

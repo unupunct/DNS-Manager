@@ -1,0 +1,268 @@
+<UserControl x:Class="DNSManagerPro.App.Views.DiagnosticsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Loaded="OnLoaded">
+    <UserControl.RenderTransform><TranslateTransform /></UserControl.RenderTransform>
+    <UserControl.Triggers>
+        <EventTrigger RoutedEvent="Loaded">
+            <BeginStoryboard>
+                <Storyboard>
+                    <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.3" />
+                    <DoubleAnimation Storyboard.TargetProperty="RenderTransform.(TranslateTransform.Y)" From="14" To="0" Duration="0:0:0.3" />
+                </Storyboard>
+            </BeginStoryboard>
+        </EventTrigger>
+    </UserControl.Triggers>
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="32,26,16,24">
+            <TextBlock Text="DNS Diagnostics" Style="{StaticResource PageTitle}" />
+            <TextBlock Text="Troubleshoot name resolution step by step. What was detected is kept separate from what might explain it." Style="{StaticResource MutedText}" Margin="0,2,0,16" />
+
+            <ItemsControl ItemsSource="{Binding Tabs}" Margin="0,0,0,16">
+                <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate><DataTemplate><RadioButton GroupName="diagtab" Style="{StaticResource SegmentRadio}" Content="{Binding Label}" IsChecked="{Binding IsSelected, Mode=TwoWay}" /></DataTemplate></ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <!-- shared query bar -->
+            <Border Style="{StaticResource CardStyle}" Visibility="{Binding ShowQueryBar, Converter={StaticResource BoolToVisibility}}">
+                <StackPanel>
+                    <TextBlock Text="DOMAIN OR IP ADDRESS" Style="{StaticResource CardTitle}" />
+                    <TextBox Text="{Binding Domain, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBlock Text="Record type" Style="{StaticResource MutedText}" Margin="0,12,0,4" />
+                    <ItemsControl ItemsSource="{Binding TypeOptions}">
+                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate><DataTemplate><RadioButton GroupName="rtype" Style="{StaticResource SegmentRadio}" Content="{Binding Label}" IsChecked="{Binding IsSelected, Mode=TwoWay}" /></DataTemplate></ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Text="{Binding QueryError}" Foreground="{StaticResource ErrorBrush}" Margin="0,8,0,0" TextWrapping="Wrap" Visibility="{Binding QueryError, Converter={StaticResource NullToCollapsed}}" />
+                </StackPanel>
+            </Border>
+
+            <TextBlock Text="{Binding Message}" Visibility="{Binding Message, Converter={StaticResource NullToCollapsed}}" Margin="0,0,16,12" TextWrapping="Wrap">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Foreground" Value="{StaticResource SuccessBrush}" />
+                        <Style.Triggers><DataTrigger Binding="{Binding MessageIsError}" Value="True"><Setter Property="Foreground" Value="{StaticResource ErrorBrush}" /></DataTrigger></Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+
+            <!-- AUTOMATED -->
+            <StackPanel Visibility="{Binding IsAuto, Converter={StaticResource BoolToVisibility}}">
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                <Button Style="{StaticResource GhostButton}" Content="Stop" Command="{Binding StopCheckCommand}" Margin="0,0,8,0" />
+                                <Button Style="{StaticResource GhostButton}" Content="Save report..." Command="{Binding ExportReportCommand}" Visibility="{Binding HasReport, Converter={StaticResource BoolToVisibility}}" Margin="0,0,8,0" />
+                                <Button Style="{StaticResource PrimaryButton}" Content="Run diagnostics" Command="{Binding RunCheckCommand}" MinWidth="140" />
+                            </StackPanel>
+                            <TextBlock Text="{Binding OverallText}" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" TextWrapping="Wrap" Foreground="{Binding OverallTone, Converter={StaticResource ToneBrush}}" />
+                        </DockPanel>
+                        <TextBlock Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,8,0,0"
+                                   Text="Checks, in order: connectivity, default gateway, your DNS servers, Windows name resolution, comparison with public resolvers, analysis, report." />
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource CardStyle}" Visibility="{Binding HasReport, Converter={StaticResource BoolToVisibility}}" Margin="0,0,16,16">
+                    <StackPanel>
+                        <TextBlock Text="DETECTED PROBLEMS (observed)" Style="{StaticResource CardTitle}" />
+                        <ItemsControl ItemsSource="{Binding Problems}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="#1A222F" CornerRadius="8" Padding="14,10" Margin="0,0,0,10" BorderThickness="3,0,0,0" BorderBrush="{Binding Tone, Converter={StaticResource ToneBrush}}">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Detected}" FontWeight="SemiBold" TextWrapping="Wrap" Foreground="{Binding Tone, Converter={StaticResource ToneBrush}}" />
+                                            <TextBlock Text="POSSIBLE CAUSES (not confirmed)" Style="{StaticResource MutedText}" FontSize="10.5" Margin="0,8,0,2" />
+                                            <ItemsControl ItemsSource="{Binding Causes}">
+                                                <ItemsControl.ItemTemplate><DataTemplate><TextBlock Text="{Binding Path=., StringFormat='- {0}'}" TextWrapping="Wrap" Style="{StaticResource MutedText}" Foreground="{StaticResource TextBrush}" /></DataTemplate></ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                            <TextBlock Text="{Binding Suggestion}" TextWrapping="Wrap" Margin="0,8,0,0" Foreground="{StaticResource AccentBrush}" Visibility="{Binding Suggestion, Converter={StaticResource NullToCollapsed}}" />
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBlock Text="Nothing was detected as wrong." Style="{StaticResource MutedText}" Visibility="{Binding Problems.Count, Converter={StaticResource ZeroToVisible}}" />
+                        <ItemsControl ItemsSource="{Binding Notes}" Margin="0,8,0,0">
+                            <ItemsControl.ItemTemplate><DataTemplate><TextBlock Text="{Binding Detected, StringFormat='Note: {0}'}" TextWrapping="Wrap" Style="{StaticResource MutedText}" Margin="0,0,0,4" /></DataTemplate></ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource CardStyle}" Margin="0,0,16,16">
+                    <StackPanel>
+                        <TextBlock Text="CHECKS" Style="{StaticResource CardTitle}" />
+                        <ItemsControl ItemsSource="{Binding Steps}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="30" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding Glyph}" FontFamily="{StaticResource IconFont}" FontSize="15" Foreground="{Binding Tone, Converter={StaticResource ToneBrush}}" VerticalAlignment="Top" Margin="0,2,0,0" />
+                                        <StackPanel Grid.Column="1">
+                                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
+                                            <TextBlock Text="{Binding Detail}" Style="{StaticResource MutedText}" TextWrapping="Wrap" />
+                                        </StackPanel>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <!-- LOOKUP -->
+            <StackPanel Visibility="{Binding IsLookup, Converter={StaticResource BoolToVisibility}}">
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <TextBlock Text="ASK THIS SERVER" Style="{StaticResource CardTitle}" />
+                        <ItemsControl ItemsSource="{Binding ServerOptions}">
+                            <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate><DataTemplate><RadioButton GroupName="srv" Style="{StaticResource SegmentRadio}" Content="{Binding Label}" IsChecked="{Binding IsSelected, Mode=TwoWay}" /></DataTemplate></ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBlock Text="Custom server address (when 'Custom server...' is selected)" Style="{StaticResource MutedText}" Margin="0,10,0,4" />
+                        <TextBox Text="{Binding CustomServer, UpdateSourceTrigger=PropertyChanged}" Width="320" HorizontalAlignment="Left" />
+                        <WrapPanel Margin="0,14,0,0">
+                            <Button Style="{StaticResource PrimaryButton}" Content="Look up" Command="{Binding LookupCommand}" Margin="0,0,8,0" MinWidth="110" />
+                            <Button Style="{StaticResource GhostButton}" Content="All record types" Command="{Binding LookupAllCommand}" Margin="0,0,8,0" />
+                            <Button Style="{StaticResource GhostButton}" Content="Clear results" Command="{Binding ClearLookupsCommand}" />
+                        </WrapPanel>
+                    </StackPanel>
+                </Border>
+                <ItemsControl ItemsSource="{Binding Lookups}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource CardStyle}" Margin="0,0,16,12" Padding="16,12">
+                                <StackPanel>
+                                    <DockPanel>
+                                        <TextBlock DockPanel.Dock="Right" Text="{Binding Time}" Style="{StaticResource MutedText}" />
+                                        <TextBlock Text="{Binding Code}" DockPanel.Dock="Right" FontWeight="SemiBold" Margin="0,0,14,0" Foreground="{Binding CodeTone, Converter={StaticResource ToneBrush}}" />
+                                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="14.5" />
+                                    </DockPanel>
+                                    <TextBlock Text="{Binding Server, StringFormat='Server: {0}'}" Style="{StaticResource MutedText}" Margin="0,2,0,8" />
+                                    <ItemsControl ItemsSource="{Binding Records}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Margin="0,0,0,3">
+                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="56" /><ColumnDefinition Width="*" /><ColumnDefinition Width="70" /></Grid.ColumnDefinitions>
+                                                    <TextBlock Text="{Binding Type}" Foreground="{StaticResource AccentBrush}" FontWeight="SemiBold" />
+                                                    <TextBlock Grid.Column="1" Text="{Binding Data}" FontFamily="Consolas" TextWrapping="Wrap" />
+                                                    <TextBlock Grid.Column="2" Text="{Binding Ttl, StringFormat='TTL {0}'}" Style="{StaticResource MutedText}" TextAlignment="Right" />
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <TextBlock Text="{Binding Empty}" Style="{StaticResource MutedText}" Visibility="{Binding Empty, Converter={StaticResource EmptyToCollapsed}}" />
+                                    <TextBlock Text="{Binding Error, StringFormat='Error: {0}'}" Foreground="{StaticResource ErrorBrush}" TextWrapping="Wrap" Visibility="{Binding Error, Converter={StaticResource NullToCollapsed}}" />
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+
+            <!-- PROPAGATION -->
+            <StackPanel Visibility="{Binding IsProp, Converter={StaticResource BoolToVisibility}}">
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Style="{StaticResource PrimaryButton}" Content="Check propagation" Command="{Binding CheckPropagationCommand}" />
+                            <TextBlock Text="Asks your current DNS and every provider in your library the same question and compares the answers." Style="{StaticResource MutedText}" TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,12,0" />
+                        </DockPanel>
+                        <TextBlock Text="{Binding PropagationSummary}" TextWrapping="Wrap" Margin="0,12,0,0" FontWeight="SemiBold" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource CardStyle}" Margin="0,0,16,16" Visibility="{Binding PropagationRows.Count, Converter={StaticResource PositiveToVisible}}">
+                    <ItemsControl ItemsSource="{Binding PropagationRows}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="150" /><ColumnDefinition Width="110" /><ColumnDefinition Width="80" /><ColumnDefinition Width="60" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                    <StackPanel><TextBlock Text="{Binding Resolver}" FontWeight="SemiBold" /><TextBlock Text="{Binding Server}" Style="{StaticResource MutedText}" FontFamily="Consolas" /></StackPanel>
+                                    <TextBlock Grid.Column="1" Text="{Binding Code}" Foreground="{Binding Tone, Converter={StaticResource ToneBrush}}" FontWeight="SemiBold" />
+                                    <TextBlock Grid.Column="2" Text="{Binding Time}" Style="{StaticResource MutedText}" />
+                                    <TextBlock Grid.Column="3" Text="{Binding Ttl}" Style="{StaticResource MutedText}" ToolTip="TTL (seconds)" />
+                                    <TextBlock Grid.Column="4" Text="{Binding Answers}" FontFamily="Consolas" TextWrapping="Wrap" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Border>
+            </StackPanel>
+
+            <!-- CACHE -->
+            <StackPanel Visibility="{Binding IsCache, Converter={StaticResource BoolToVisibility}}">
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                <Button Style="{StaticResource GhostButton}" Content="Refresh" Command="{Binding RefreshCacheCommand}" Margin="0,0,8,0" />
+                                <Button Style="{StaticResource GhostButton}" Content="Flush DNS cache" Command="{Binding FlushCacheCommand}" />
+                            </StackPanel>
+                            <TextBox Width="260" HorizontalAlignment="Left" Text="{Binding CacheFilter, UpdateSourceTrigger=PropertyChanged}" ToolTip="Filter by name or data" />
+                        </DockPanel>
+                        <TextBlock Text="{Binding CacheStatus}" Style="{StaticResource MutedText}" Margin="0,10,0,0" TextWrapping="Wrap" />
+                        <TextBlock Style="{StaticResource MutedText}" Margin="0,4,0,0" TextWrapping="Wrap" Text="Reading and flushing the cache need administrator rights. Entries come back as you browse." />
+                        <Button Style="{StaticResource PrimaryButton}" Content="Restart as administrator" Command="{Binding RestartAsAdminCommand}" HorizontalAlignment="Left" Margin="0,12,0,0"
+                                Visibility="{Binding CacheNeedsAdmin, Converter={StaticResource BoolToVisibility}}" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource CardStyle}" Margin="0,0,16,16" Visibility="{Binding CacheRows.Count, Converter={StaticResource PositiveToVisible}}">
+                    <ItemsControl ItemsSource="{Binding CacheRows}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" MinWidth="180" /><ColumnDefinition Width="64" /><ColumnDefinition Width="2*" /><ColumnDefinition Width="70" /></Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}" />
+                                    <TextBlock Grid.Column="1" Text="{Binding Type}" Foreground="{StaticResource AccentBrush}" />
+                                    <TextBlock Grid.Column="2" Text="{Binding Data}" FontFamily="Consolas" TextTrimming="CharacterEllipsis" ToolTip="{Binding Data}" />
+                                    <TextBlock Grid.Column="3" Text="{Binding Ttl}" Style="{StaticResource MutedText}" TextAlignment="Right" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Border>
+            </StackPanel>
+
+            <!-- MONITORING -->
+            <StackPanel Visibility="{Binding IsMon, Converter={StaticResource BoolToVisibility}}">
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <TextBlock Text="BACKGROUND MONITORING (optional, off by default)" Style="{StaticResource CardTitle}" />
+                        <CheckBox Content="Monitor DNS while the app is running" IsChecked="{Binding MonitorEnabled}" FontWeight="SemiBold" />
+                        <TextBlock Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="26,4,0,12"
+                                   Text="Every interval it reads your adapter's DNS settings and sends one DNS query to your DNS server (about one network packet). Nothing leaves your computer except that query." />
+                        <TextBlock Text="Check every" Style="{StaticResource MutedText}" Margin="0,0,0,4" />
+                        <ItemsControl ItemsSource="{Binding IntervalOptions}">
+                            <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate><DataTemplate><RadioButton GroupName="interval" Style="{StaticResource SegmentRadio}" Content="{Binding Label}" IsChecked="{Binding IsSelected, Mode=TwoWay}" /></DataTemplate></ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <CheckBox Content="Notify me when DNS settings change outside this app" IsChecked="{Binding NotifyChange}" Margin="0,14,0,6" />
+                        <CheckBox Content="Notify me when DNS resolution fails or recovers" IsChecked="{Binding NotifyFailure}" />
+                        <DockPanel Margin="0,16,0,0">
+                            <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="Check now" Command="{Binding CheckNowCommand}" />
+                            <TextBlock Text="{Binding MonitorStatus}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                        </DockPanel>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource CardStyle}" Margin="0,0,16,16">
+                    <StackPanel>
+                        <TextBlock Text="RECENT MONITORING EVENTS" Style="{StaticResource CardTitle}" />
+                        <TextBlock Text="No events yet." Style="{StaticResource MutedText}" Visibility="{Binding MonitorEvents.Count, Converter={StaticResource ZeroToVisible}}" />
+                        <ItemsControl ItemsSource="{Binding MonitorEvents}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="150" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding Time}" Style="{StaticResource MutedText}" />
+                                        <TextBlock Grid.Column="1" Text="{Binding Message}" TextWrapping="Wrap" Foreground="{Binding Tone, Converter={StaticResource ToneBrush}}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
+

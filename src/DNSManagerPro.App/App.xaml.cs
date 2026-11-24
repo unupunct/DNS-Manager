@@ -43,6 +43,17 @@ public partial class App : Application
         sc.AddSingleton<IProfileRepository, DNSManagerPro.Data.SqliteProfileRepository>();
         sc.AddSingleton<IEncryptedDnsService, NetshEncryptedDnsService>();
         sc.AddSingleton<ProfileService>();
+        sc.AddSingleton<IDnsLookupClient, DnsLookupClient>();
+        sc.AddSingleton<IPingService, IcmpPingService>();
+        sc.AddSingleton<IOsResolver, SystemResolver>();
+        sc.AddSingleton<IDnsCacheInspector, PowerShellDnsCacheInspector>();
+        sc.AddSingleton<IDiagnosticsRepository, DNSManagerPro.Data.SqliteDiagnosticsRepository>();
+        sc.AddSingleton<IMonitorRepository, DNSManagerPro.Data.SqliteMonitorRepository>();
+        sc.AddSingleton<ITimelineRepository, DNSManagerPro.Data.SqliteTimelineRepository>();
+        sc.AddSingleton<DNSManagerPro.Core.Diagnostics.DiagnosticsWorkflow>();
+        sc.AddSingleton(sp => new SettingsService(AppPaths.SettingsFile, sp.GetRequiredService<ILogger<SettingsService>>()));
+        sc.AddSingleton<INotifier, TrayNotifier>();
+        sc.AddSingleton<MonitorService>();
         sc.AddSingleton<SystemStateService>();
         sc.AddSingleton<INavigationService, NavigationService>();
         sc.AddTransient<DashboardViewModel>();
@@ -51,6 +62,8 @@ public partial class App : Application
         sc.AddSingleton<BenchmarkViewModel>();
         sc.AddSingleton<ProfilesViewModel>();
         sc.AddSingleton<CustomDnsViewModel>();
+        sc.AddSingleton<DiagnosticsViewModel>();
+        sc.AddSingleton<HistoryViewModel>();
         sc.AddSingleton<MainViewModel>();
         sc.AddSingleton<MainWindow>();
         _services = sc.BuildServiceProvider();
@@ -80,6 +93,8 @@ public partial class App : Application
         };
 
         log.LogInformation("DNS Manager Pro starting (elevated: {Elevated})", _services.GetRequiredService<IPrivilegeService>().IsElevated);
+        _services.GetRequiredService<SettingsService>().Load();
+        _services.GetRequiredService<MonitorService>().Start();
         _ = _services.GetRequiredService<BenchmarkSession>().LoadAsync();
         _services.GetRequiredService<MainWindow>().Show();
         if (e.Args.Length > 0)
@@ -97,6 +112,7 @@ public partial class App : Application
         base.OnExit(e);
     }
 }
+
 
 
 

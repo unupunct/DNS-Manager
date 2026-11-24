@@ -137,7 +137,9 @@ public sealed class ApplyFlow(
     {
         var vm = new ApplyDnsViewModel(request, state.Adapters, adapterId ?? state.ActiveAdapter?.Id, service, elevation, privilege.IsElevated, encrypted);
         dialogs.ShowApply(vm);
+        state.MarkAppChange();
         await state.RefreshAsync(true); // always re-read: reflects both success and rollback
         return vm.Succeeded;
     }
 }
+
