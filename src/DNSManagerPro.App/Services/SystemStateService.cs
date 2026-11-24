@@ -16,6 +16,7 @@ public sealed partial class SystemStateService(
     INetworkAdapterService adapterService,
     IDnsProbe probe,
     IPrivilegeService privilege,
+    IAdapterStore adapterStore,
     ILogger<SystemStateService> logger) : ObservableObject, IDisposable
 {
     public const int MaxHistory = 60;
@@ -85,6 +86,15 @@ public sealed partial class SystemStateService(
             BackgroundOperation = "Reading network configuration...";
             var list = await adapterService.GetAdaptersAsync(ct);
             Adapters = list;
+            try
+            {
+                await adapterStore.RecordAsync(list, ct);
+            }
+            catch (Exception ex) when (ex is Microsoft.Data.Sqlite.SqliteException or System.IO.IOException)
+            {
+                logger.LogWarning(ex, "Could not record adapters");
+            }
+
             ActiveAdapter = ActiveAdapterSelector.Select(list);
             IsConnected = ActiveAdapter is { HasGateway: true } && System.Net.NetworkInformation.NetworkInterface.GetIsNetworkAvailable();
             OnPropertyChanged(nameof(ActiveProvider));
@@ -148,4 +158,6 @@ public sealed partial class SystemStateService(
         }
     }
 }
+
+
 

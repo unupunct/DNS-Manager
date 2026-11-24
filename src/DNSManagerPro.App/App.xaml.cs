@@ -25,14 +25,33 @@ public partial class App : Application
         sc.AddSingleton<IPrivilegeService, WindowsPrivilegeService>();
         sc.AddSingleton<IDnsCacheService, WindowsDnsCacheService>();
         sc.AddSingleton<IDnsProbe, UdpDnsProbe>();
+        sc.AddSingleton(new DNSManagerPro.Data.SqliteDatabase(AppPaths.Database));
+        sc.AddSingleton<DNSManagerPro.Data.SqliteProviderRepository>();
+        sc.AddSingleton<IProviderRepository>(sp => sp.GetRequiredService<DNSManagerPro.Data.SqliteProviderRepository>());
+        sc.AddSingleton<IAdapterStore>(sp => sp.GetRequiredService<DNSManagerPro.Data.SqliteProviderRepository>());
+        sc.AddSingleton<IDialogService, DialogService>();
         sc.AddSingleton<SystemStateService>();
         sc.AddSingleton<INavigationService, NavigationService>();
         sc.AddTransient<DashboardViewModel>();
+        sc.AddSingleton<ProvidersViewModel>();
+        sc.AddSingleton<AdaptersViewModel>();
         sc.AddSingleton<MainViewModel>();
         sc.AddSingleton<MainWindow>();
         _services = sc.BuildServiceProvider();
 
         var log = _services.GetRequiredService<ILogger<App>>();
+        try
+        {
+            _services.GetRequiredService<DNSManagerPro.Data.SqliteDatabase>().Migrate();
+            _services.GetRequiredService<DNSManagerPro.Data.SqliteProviderRepository>().SeedAsync().GetAwaiter().GetResult();
+        }
+        catch (Exception ex)
+        {
+            log.LogCritical(ex, "Database initialisation failed");
+            MessageBox.Show("The local database could not be opened:\n\n" + ex.Message, "DNS Manager Pro", MessageBoxButton.OK, MessageBoxImage.Error);
+            Shutdown(1);
+            return;
+        }
         DispatcherUnhandledException += (_, args) =>
         {
             log.LogError(args.Exception, "Unhandled UI exception");
@@ -54,3 +73,4 @@ public partial class App : Application
         base.OnExit(e);
     }
 }
+

@@ -15,6 +15,23 @@
             <conv:NullToCollapsedConverter x:Key="NullToCollapsed" />
             <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
 
+            <DataTemplate x:Key="InfoRowTemplate">
+                <Grid Margin="0,0,0,9">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="116" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="{Binding Label}" Foreground="{StaticResource TextMutedBrush}" FontSize="12.5" />
+                    <TextBlock Grid.Column="1" Text="{Binding Value}" Foreground="{Binding Tone, Converter={StaticResource ToneBrush}}"
+                               FontWeight="SemiBold" TextWrapping="Wrap" />
+                </Grid>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:ProvidersViewModel}">
+                <views:ProvidersView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:AdaptersViewModel}">
+                <views:AdaptersView />
+            </DataTemplate>
             <DataTemplate DataType="{x:Type vm:DashboardViewModel}">
                 <views:DashboardView />
             </DataTemplate>
@@ -24,3 +41,4 @@
         </ResourceDictionary>
     </Application.Resources>
 </Application>
+

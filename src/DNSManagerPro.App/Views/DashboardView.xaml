@@ -2,19 +2,6 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:c="clr-namespace:DNSManagerPro.App.Controls">
-    <UserControl.Resources>
-        <DataTemplate x:Key="InfoRowTemplate">
-            <Grid Margin="0,0,0,9">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="116" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <TextBlock Text="{Binding Label}" Foreground="{StaticResource TextMutedBrush}" FontSize="12.5" />
-                <TextBlock Grid.Column="1" Text="{Binding Value}" Foreground="{Binding Tone, Converter={StaticResource ToneBrush}}"
-                           FontWeight="SemiBold" TextWrapping="Wrap" />
-            </Grid>
-        </DataTemplate>
-    </UserControl.Resources>
     <UserControl.RenderTransform><TranslateTransform /></UserControl.RenderTransform>
     <UserControl.Triggers>
         <EventTrigger RoutedEvent="Loaded">
@@ -117,5 +104,6 @@
         </StackPanel>
     </ScrollViewer>
 </UserControl>
+
 
 

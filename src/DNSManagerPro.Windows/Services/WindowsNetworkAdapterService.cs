@@ -26,7 +26,7 @@ public sealed class WindowsNetworkAdapterService(ILogger<WindowsNetworkAdapterSe
         var result = new List<NetworkAdapterInfo>();
         foreach (var nic in NetworkInterface.GetAllNetworkInterfaces())
         {
-            if (nic.NetworkInterfaceType is NetworkInterfaceType.Loopback or NetworkInterfaceType.Tunnel)
+            if (nic.NetworkInterfaceType is NetworkInterfaceType.Loopback or NetworkInterfaceType.Tunnel || IsFilterDriverBinding(nic.Description))
             {
                 continue;
             }
@@ -136,10 +136,21 @@ public sealed class WindowsNetworkAdapterService(ILogger<WindowsNetworkAdapterSe
         }
     }
 
+    /// <summary>NDIS lightweight-filter bindings (QoS, WFP, Npcap...) appear as extra "adapters" but are not configurable network interfaces.</summary>
+    private static bool IsFilterDriverBinding(string description) =>
+        FilterMarkers.Any(m => description.Contains(m, StringComparison.OrdinalIgnoreCase));
+
+    private static readonly string[] FilterMarkers =
+    [
+        "-QoS Packet Scheduler", "-WFP ", "-Native WiFi Filter", "-Virtual WiFi Filter", "-Npcap Packet Driver", "-VirtualBox NDIS", "-Hyper-V Virtual Switch Extension Filter",
+    ];
+
     private static AdapterKind Classify(NetworkInterface nic)
     {
         var desc = nic.Description;
         if (desc.Contains("Virtual", StringComparison.OrdinalIgnoreCase)
+            || desc.Contains("WAN Miniport", StringComparison.OrdinalIgnoreCase)
+            || desc.Contains("Bluetooth", StringComparison.OrdinalIgnoreCase)
             || desc.Contains("VMware", StringComparison.OrdinalIgnoreCase)
             || desc.Contains("Hyper-V", StringComparison.OrdinalIgnoreCase)
             || desc.Contains("VirtualBox", StringComparison.OrdinalIgnoreCase)
@@ -164,3 +175,4 @@ public sealed class WindowsNetworkAdapterService(ILogger<WindowsNetworkAdapterSe
         return bytes.Length == 0 ? "-" : string.Join(':', bytes.Select(b => b.ToString("X2", System.Globalization.CultureInfo.InvariantCulture)));
     }
 }
+

@@ -22,3 +22,11 @@ Rules: the App depends on interfaces from Core; Windows-specific code lives only
 
 ## Roadmap
 2 providers/adapters/config read - 3 apply, backup, rollback, verify - 4 benchmark + charts + export - 5 custom DNS, profiles, SQLite - 6 diagnostics, history, monitoring - 7 settings, hardening, tests - 8 performance, docs, installer, release.
+
+## Phase 2 decisions
+
+- **Persistence**: SQLite via Microsoft.Data.Sqlite, schema versioned with PRAGMA user_version migrations (SqliteDatabase). Providers and detected adapters are tables; later phases add migrations. Built-ins are seeded once so user edits survive restarts; *Restore built-ins* resets them.
+- **Validation** lives in Core.Providers.DnsValidator and is enforced both in the editor (live) and in the repository (defence in depth).
+- **Encrypted DNS**: DoH/DoT/DoQ endpoints are stored as provider metadata only. Applying server IPs never claims to enable them.
+- **Adapters**: NDIS filter bindings (QoS, WFP, Npcap...) are excluded; WAN Miniport/Bluetooth are classified Virtual and hidden unless *Show all adapters* is ticked.
+
