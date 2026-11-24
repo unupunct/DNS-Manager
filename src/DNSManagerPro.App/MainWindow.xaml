@@ -1,0 +1,116 @@
+<Window x:Class="DNSManagerPro.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="DNS Manager Pro" Width="1320" Height="820" MinWidth="980" MinHeight="620"
+        Background="{StaticResource BackgroundBrush}" Foreground="{StaticResource TextBrush}"
+        FontFamily="{StaticResource UiFont}" FontSize="13"
+        WindowStartupLocation="CenterScreen" UseLayoutRounding="True" TextOptions.TextFormattingMode="Ideal">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Collapsible sidebar -->
+        <Border Grid.Row="0" Grid.Column="0" Background="{StaticResource SidebarGradientBrush}"
+                BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,1,0" ClipToBounds="True">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Width" Value="244" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsSidebarExpanded}" Value="False">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard><DoubleAnimation Storyboard.TargetProperty="Width" To="64" Duration="0:0:0.2"><DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut" /></DoubleAnimation.EasingFunction></DoubleAnimation></Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard><DoubleAnimation Storyboard.TargetProperty="Width" To="244" Duration="0:0:0.2"><DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut" /></DoubleAnimation.EasingFunction></DoubleAnimation></Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+            <DockPanel>
+                <Grid DockPanel.Dock="Top" Height="68">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="64" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border Width="34" Height="34" CornerRadius="9" Background="{StaticResource AccentGradientBrush}" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock Text="&#xE774;" FontFamily="{StaticResource IconFont}" FontSize="18" Foreground="#06202E" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Text="DNS Manager" FontWeight="Bold" FontSize="15" TextTrimming="None" />
+                        <TextBlock Text="PRO" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource AccentBrush}" />
+                    </StackPanel>
+                </Grid>
+                <Button DockPanel.Dock="Bottom" Style="{StaticResource IconButton}" Margin="12,8,12,12" HorizontalAlignment="Left"
+                        Content="&#xE700;" ToolTip="Collapse / expand sidebar" Click="OnToggleSidebar" />
+                <ListBox Style="{StaticResource NavListBoxStyle}" ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem, Mode=TwoWay}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Height="42">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="48" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="{Binding Glyph}" FontFamily="{StaticResource IconFont}" FontSize="17"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Text="{Binding Title}" FontSize="13.5" FontWeight="SemiBold"
+                                           VerticalAlignment="Center" TextWrapping="NoWrap" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </Border>
+
+        <!-- Page host with fade transition -->
+        <ContentControl Grid.Row="0" Grid.Column="1" Content="{Binding CurrentPage}" Margin="0" />
+
+        <!-- Global status bar -->
+        <Border Grid.Row="1" Grid.ColumnSpan="2" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Padding="16,0" Height="32">
+            <DockPanel LastChildFill="False">
+                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
+                    <Ellipse Width="9" Height="9" VerticalAlignment="Center" Margin="0,0,7,0">
+                        <Ellipse.Style>
+                            <Style TargetType="Ellipse">
+                                <Setter Property="Fill" Value="{StaticResource ErrorBrush}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsConnected}" Value="True"><Setter Property="Fill" Value="{StaticResource SuccessBrush}" /></DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Ellipse.Style>
+                    </Ellipse>
+                    <TextBlock Text="{Binding ConnectivityText}" VerticalAlignment="Center" FontSize="12" />
+                    <TextBlock Text="  |  " Foreground="{StaticResource TextDimBrush}" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding AdapterText}" VerticalAlignment="Center" FontSize="12" />
+                    <TextBlock Text="  |  " Foreground="{StaticResource TextDimBrush}" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding DnsText}" VerticalAlignment="Center" FontSize="12" />
+                </StackPanel>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <TextBlock Text="{Binding BackgroundText}" VerticalAlignment="Center" FontSize="12" Foreground="{StaticResource TextMutedBrush}" />
+                    <TextBlock Text="  |  " Foreground="{StaticResource TextDimBrush}" VerticalAlignment="Center" />
+                    <TextBlock Text="&#xE72E;" FontFamily="{StaticResource IconFont}" VerticalAlignment="Center" Margin="0,0,6,0" FontSize="12">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="{StaticResource WarningBrush}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsElevated}" Value="True"><Setter Property="Foreground" Value="{StaticResource SuccessBrush}" /></DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="{Binding PrivilegeText}" VerticalAlignment="Center" FontSize="12" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
+    </Grid>
+</Window>

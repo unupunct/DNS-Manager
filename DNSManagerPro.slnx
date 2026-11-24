@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/DNSManagerPro.App/DNSManagerPro.App.csproj" />
+    <Project Path="src/DNSManagerPro.Core/DNSManagerPro.Core.csproj" />
+    <Project Path="src/DNSManagerPro.Data/DNSManagerPro.Data.csproj" />
+    <Project Path="src/DNSManagerPro.Infrastructure/DNSManagerPro.Infrastructure.csproj" />
+    <Project Path="src/DNSManagerPro.Networking/DNSManagerPro.Networking.csproj" />
+    <Project Path="src/DNSManagerPro.Tests/DNSManagerPro.Tests.csproj" />
+    <Project Path="src/DNSManagerPro.Windows/DNSManagerPro.Windows.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,121 @@
+<UserControl x:Class="DNSManagerPro.App.Views.DashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:DNSManagerPro.App.Controls">
+    <UserControl.Resources>
+        <DataTemplate x:Key="InfoRowTemplate">
+            <Grid Margin="0,0,0,9">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="116" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{Binding Label}" Foreground="{StaticResource TextMutedBrush}" FontSize="12.5" />
+                <TextBlock Grid.Column="1" Text="{Binding Value}" Foreground="{Binding Tone, Converter={StaticResource ToneBrush}}"
+                           FontWeight="SemiBold" TextWrapping="Wrap" />
+            </Grid>
+        </DataTemplate>
+    </UserControl.Resources>
+    <UserControl.RenderTransform><TranslateTransform /></UserControl.RenderTransform>
+    <UserControl.Triggers>
+        <EventTrigger RoutedEvent="Loaded">
+            <BeginStoryboard>
+                <Storyboard>
+                    <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.3" />
+                    <DoubleAnimation Storyboard.TargetProperty="RenderTransform.(TranslateTransform.Y)" From="14" To="0" Duration="0:0:0.3"><DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut" /></DoubleAnimation.EasingFunction></DoubleAnimation>
+                </Storyboard>
+            </BeginStoryboard>
+        </EventTrigger>
+    </UserControl.Triggers>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="32,26,16,16">
+            <DockPanel Margin="0,0,16,20">
+                <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Command="{Binding RefreshCommand}" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE72C;" FontFamily="{StaticResource IconFont}" Margin="0,0,8,0" VerticalAlignment="Center" />
+                        <TextBlock Text="Refresh" />
+                    </StackPanel>
+                </Button>
+                <StackPanel>
+                    <TextBlock Text="Dashboard" Style="{StaticResource PageTitle}" />
+                    <TextBlock Text="{Binding UpdatedText}" Style="{StaticResource MutedText}" Margin="0,2,0,0" />
+                </StackPanel>
+            </DockPanel>
+
+            <c:AdaptiveGrid MinColumnWidth="320">
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <TextBlock Text="DNS CONFIGURATION" Style="{StaticResource CardTitle}" />
+                        <ItemsControl ItemsSource="{Binding DnsInfo}" ItemTemplate="{StaticResource InfoRowTemplate}" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <TextBlock Text="NETWORK" Style="{StaticResource CardTitle}" />
+                        <ItemsControl ItemsSource="{Binding NetworkInfo}" ItemTemplate="{StaticResource InfoRowTemplate}" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <TextBlock Text="PERFORMANCE" Style="{StaticResource CardTitle}" />
+                        <TextBlock Text="{Binding LatencyText}" FontSize="38" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" />
+                        <TextBlock Text="{Binding LatencyCaption}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,2,0,14" />
+                        <Grid Margin="0,0,0,9"><Grid.ColumnDefinitions><ColumnDefinition Width="116" /><ColumnDefinition /></Grid.ColumnDefinitions>
+                            <TextBlock Text="Last benchmark" Foreground="{StaticResource TextMutedBrush}" FontSize="12.5" />
+                            <TextBlock Grid.Column="1" Text="{Binding LastBenchmark}" FontWeight="SemiBold" TextWrapping="Wrap" /></Grid>
+                        <Grid Margin="0,0,0,9"><Grid.ColumnDefinitions><ColumnDefinition Width="116" /><ColumnDefinition /></Grid.ColumnDefinitions>
+                            <TextBlock Text="Fastest provider" Foreground="{StaticResource TextMutedBrush}" FontSize="12.5" />
+                            <TextBlock Grid.Column="1" Text="{Binding FastestProvider}" FontWeight="SemiBold" /></Grid>
+                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="116" /><ColumnDefinition /></Grid.ColumnDefinitions>
+                            <TextBlock Text="Availability" Foreground="{StaticResource TextMutedBrush}" FontSize="12.5" />
+                            <TextBlock Grid.Column="1" Text="{Binding Availability}" FontWeight="SemiBold" /></Grid>
+                    </StackPanel>
+                </Border>
+            </c:AdaptiveGrid>
+
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Right" Text="{Binding StatsSummary}" Style="{StaticResource MutedText}" />
+                        <TextBlock Text="DNS RESPONSE TIME - THIS SESSION" Style="{StaticResource CardTitle}" />
+                    </DockPanel>
+                    <c:SparklineChart Height="150" Values="{Binding LatencyHistory}" LineBrush="{StaticResource AccentBrush}" />
+                    <TextBlock Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,8,0,0"
+                               Text="One direct query every 15 seconds. Single samples fluctuate and resolver caches can make them look faster than a cold lookup; use the benchmark for comparisons." />
+                </StackPanel>
+            </Border>
+
+            <TextBlock Text="QUICK ACTIONS" Style="{StaticResource CardTitle}" Margin="0,4,0,10" />
+            <WrapPanel Margin="0,0,16,0">
+                <Button Style="{StaticResource QuickActionButton}" Command="{Binding ChangeDnsCommand}">
+                    <StackPanel><TextBlock Text="&#xE774;" FontFamily="{StaticResource IconFont}" FontSize="20" Foreground="{StaticResource AccentBrush}" /><TextBlock Text="Change DNS" FontWeight="SemiBold" Margin="0,8,0,0" /></StackPanel>
+                </Button>
+                <Button Style="{StaticResource QuickActionButton}" Command="{Binding RestoreAutomaticCommand}">
+                    <StackPanel><TextBlock Text="&#xE777;" FontFamily="{StaticResource IconFont}" FontSize="20" Foreground="{StaticResource AccentBrush}" /><TextBlock Text="Restore automatic" FontWeight="SemiBold" Margin="0,8,0,0" /></StackPanel>
+                </Button>
+                <Button Style="{StaticResource QuickActionButton}" Command="{Binding RunBenchmarkCommand}">
+                    <StackPanel><TextBlock Text="&#xEC4A;" FontFamily="{StaticResource IconFont}" FontSize="20" Foreground="{StaticResource AccentBrush}" /><TextBlock Text="Run benchmark" FontWeight="SemiBold" Margin="0,8,0,0" /></StackPanel>
+                </Button>
+                <Button Style="{StaticResource QuickActionButton}" Command="{Binding FlushDnsCommand}">
+                    <StackPanel><TextBlock Text="&#xE74D;" FontFamily="{StaticResource IconFont}" FontSize="20" Foreground="{StaticResource AccentBrush}" /><TextBlock Text="Flush DNS cache" FontWeight="SemiBold" Margin="0,8,0,0" /></StackPanel>
+                </Button>
+                <Button Style="{StaticResource QuickActionButton}" Command="{Binding RunDiagnosticsCommand}">
+                    <StackPanel><TextBlock Text="&#xE9D9;" FontFamily="{StaticResource IconFont}" FontSize="20" Foreground="{StaticResource AccentBrush}" /><TextBlock Text="Run diagnostics" FontWeight="SemiBold" Margin="0,8,0,0" /></StackPanel>
+                </Button>
+                <Button Style="{StaticResource QuickActionButton}" Command="{Binding CreateProfileCommand}">
+                    <StackPanel><TextBlock Text="&#xE710;" FontFamily="{StaticResource IconFont}" FontSize="20" Foreground="{StaticResource AccentBrush}" /><TextBlock Text="Create profile" FontWeight="SemiBold" Margin="0,8,0,0" /></StackPanel>
+                </Button>
+            </WrapPanel>
+            <TextBlock Text="{Binding ActionMessage}" Visibility="{Binding ActionMessage, Converter={StaticResource NullToCollapsed}}" TextWrapping="Wrap" Margin="0,4,16,0">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Foreground" Value="{StaticResource SuccessBrush}" />
+                        <Style.Triggers><DataTrigger Binding="{Binding ActionIsError}" Value="True"><Setter Property="Foreground" Value="{StaticResource ErrorBrush}" /></DataTrigger></Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
+
+
