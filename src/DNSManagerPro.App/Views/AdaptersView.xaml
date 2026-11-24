@@ -51,8 +51,15 @@
         <Border Grid.Row="1" Grid.Column="2" Style="{StaticResource CardStyle}" Margin="0,0,0,8" VerticalAlignment="Top">
             <StackPanel>
                 <TextBlock Text="ADAPTER DETAILS" Style="{StaticResource CardTitle}" />
+                <WrapPanel Margin="0,0,0,16">
+                    <Button Style="{StaticResource PrimaryButton}" Content="Change DNS..." Command="{Binding ChangeDnsCommand}" Margin="0,0,8,6" />
+                    <Button Style="{StaticResource GhostButton}" Content="Restore automatic DNS" Command="{Binding RestoreAutomaticCommand}" Margin="0,0,8,6" />
+                    <Button Style="{StaticResource GhostButton}" Content="Restore previous settings" Command="{Binding RestorePreviousCommand}" IsEnabled="{Binding HasPrevious}" Margin="0,0,0,6"
+                            ToolTip="Undo the last change DNS Manager Pro made to this adapter." />
+                </WrapPanel>
                 <ItemsControl ItemsSource="{Binding Details}" ItemTemplate="{StaticResource InfoRowTemplate}" />
             </StackPanel>
         </Border>
     </Grid>
 </UserControl>
+

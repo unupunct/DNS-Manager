@@ -13,6 +13,7 @@
 
             <conv:ToneBrushConverter x:Key="ToneBrush" />
             <conv:NullToCollapsedConverter x:Key="NullToCollapsed" />
+            <conv:EnumToBoolConverter x:Key="EnumToBool" />
             <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
 
             <DataTemplate x:Key="InfoRowTemplate">
@@ -41,4 +42,5 @@
         </ResourceDictionary>
     </Application.Resources>
 </Application>
+
 

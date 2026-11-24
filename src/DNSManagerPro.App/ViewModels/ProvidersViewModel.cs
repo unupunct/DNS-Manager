@@ -64,6 +64,9 @@ public sealed partial class ProviderCardViewModel(DnsProvider provider, Provider
     [RelayCommand(CanExecute = nameof(HasAddresses))]
     private Task TestAsync() => owner.TestAsync(this);
 
+    [RelayCommand(CanExecute = nameof(HasAddresses))]
+    private Task ApplyAsync() => owner.ApplyAsync(this);
+
     [RelayCommand]
     private Task EditAsync() => owner.EditAsync(this);
 
@@ -80,14 +83,16 @@ public sealed partial class ProvidersViewModel : ObservableObject
     private readonly IDnsProbe _probe;
     private readonly SystemStateService _state;
     private readonly ILogger<ProvidersViewModel> _log;
+    private readonly IApplyFlow _flow;
 
-    public ProvidersViewModel(IProviderRepository repo, IDialogService dialogs, IDnsProbe probe, SystemStateService state, ILogger<ProvidersViewModel> log)
+    public ProvidersViewModel(IProviderRepository repo, IDialogService dialogs, IDnsProbe probe, SystemStateService state, IApplyFlow flow, ILogger<ProvidersViewModel> log)
     {
         _repo = repo;
         _dialogs = dialogs;
         _probe = probe;
         _state = state;
         _log = log;
+        _flow = flow;
         _ = LoadAsync();
     }
 
@@ -166,6 +171,8 @@ public sealed partial class ProvidersViewModel : ObservableObject
         }
     }
 
+    internal Task ApplyAsync(ProviderCardViewModel card) => _flow.ApplyProviderAsync(card.Provider);
+
     internal async Task EditAsync(ProviderCardViewModel card)
     {
         var edited = _dialogs.EditProvider(card.Provider);
@@ -180,6 +187,7 @@ public sealed partial class ProvidersViewModel : ObservableObject
             card.Provider = edited;
             card.TestResult = null;
             card.TestCommand.NotifyCanExecuteChanged();
+            card.ApplyCommand.NotifyCanExecuteChanged();
             MessageIsError = false;
             Message = $"Saved {edited.Name}.";
         }
@@ -253,3 +261,4 @@ public sealed partial class ProvidersViewModel : ObservableObject
         }
     }
 }
+

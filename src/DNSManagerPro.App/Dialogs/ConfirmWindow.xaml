@@ -8,8 +8,9 @@
         <TextBlock x:Name="TitleText" FontSize="18" FontWeight="SemiBold" />
         <TextBlock x:Name="MessageText" TextWrapping="Wrap" Margin="0,10,0,22" Foreground="{StaticResource TextMutedBrush}" />
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button Content="Cancel" Style="{StaticResource GhostButton}" IsCancel="True" Margin="0,0,10,0" MinWidth="90" />
+            <Button x:Name="CancelButton" Content="Cancel" Style="{StaticResource GhostButton}" IsCancel="True" Margin="0,0,10,0" MinWidth="90" />
             <Button x:Name="OkButton" Style="{StaticResource PrimaryButton}" IsDefault="True" MinWidth="90" Click="OnOk" />
         </StackPanel>
     </StackPanel>
 </Window>
+

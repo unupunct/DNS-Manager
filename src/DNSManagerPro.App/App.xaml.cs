@@ -30,6 +30,12 @@ public partial class App : Application
         sc.AddSingleton<IProviderRepository>(sp => sp.GetRequiredService<DNSManagerPro.Data.SqliteProviderRepository>());
         sc.AddSingleton<IAdapterStore>(sp => sp.GetRequiredService<DNSManagerPro.Data.SqliteProviderRepository>());
         sc.AddSingleton<IDialogService, DialogService>();
+        sc.AddSingleton<IProcessRunner, ProcessRunner>();
+        sc.AddSingleton<IDnsConfigurator, NetshDnsConfigurator>();
+        sc.AddSingleton<IDnsHistoryRepository, DNSManagerPro.Data.SqliteHistoryRepository>();
+        sc.AddSingleton<DNSManagerPro.Core.Configuration.DnsChangeService>();
+        sc.AddSingleton<IElevationService, ElevationService>();
+        sc.AddSingleton<IApplyFlow, ApplyFlow>();
         sc.AddSingleton<SystemStateService>();
         sc.AddSingleton<INavigationService, NavigationService>();
         sc.AddTransient<DashboardViewModel>();
@@ -65,6 +71,13 @@ public partial class App : Application
 
         log.LogInformation("DNS Manager Pro starting (elevated: {Elevated})", _services.GetRequiredService<IPrivilegeService>().IsElevated);
         _services.GetRequiredService<MainWindow>().Show();
+        if (e.Args.Length > 0)
+        {
+            var flow = _services.GetRequiredService<IApplyFlow>();
+            Dispatcher.BeginInvoke(
+                System.Windows.Threading.DispatcherPriority.ContextIdle,
+                new Action(async () => await flow.HandleStartupArgsAsync(e.Args)));
+        }
     }
 
     protected override void OnExit(ExitEventArgs e)
@@ -73,4 +86,5 @@ public partial class App : Application
         base.OnExit(e);
     }
 }
+
 

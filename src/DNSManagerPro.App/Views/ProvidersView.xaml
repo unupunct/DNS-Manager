@@ -71,7 +71,7 @@
                                     <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding IPv6Line}" FontFamily="Consolas" FontSize="12.5" Margin="0,4,0,0" TextTrimming="CharacterEllipsis" ToolTip="{Binding IPv6Line}" />
                                 </Grid>
                                 <WrapPanel Margin="0,16,0,0">
-                                    <Button Style="{StaticResource PrimaryButton}" Content="Quick Apply" IsEnabled="False" Margin="0,0,8,6" ToolTip="Applying DNS (with preview, backup and rollback) arrives in Phase 3." />
+                                    <Button Style="{StaticResource PrimaryButton}" Content="Quick Apply" Command="{Binding ApplyCommand}" Margin="0,0,8,6" ToolTip="Review the change, then apply it with automatic backup and rollback." />
                                     <Button Style="{StaticResource GhostButton}" Content="Test Performance" Command="{Binding TestCommand}" Margin="0,0,8,6" />
                                     <Button Style="{StaticResource GhostButton}" Content="More Information" Command="{Binding ToggleInfoCommand}" Margin="0,0,0,6" />
                                 </WrapPanel>
@@ -103,3 +103,4 @@
         </StackPanel>
     </ScrollViewer>
 </UserControl>
+

@@ -32,10 +32,14 @@ internal static class AdapterExtensions
 public sealed partial class AdaptersViewModel : ObservableObject, IDisposable
 {
     private readonly SystemStateService _state;
+    private readonly IApplyFlow _flow;
+    private readonly INavigationService _nav;
 
-    public AdaptersViewModel(SystemStateService state)
+    public AdaptersViewModel(SystemStateService state, IApplyFlow flow, INavigationService nav)
     {
         _state = state;
+        _flow = flow;
+        _nav = nav;
         _state.PropertyChanged += OnStateChanged;
         Rebuild();
         _ = _state.RefreshAsync(false);
@@ -54,7 +58,35 @@ public sealed partial class AdaptersViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private string _summary = string.Empty;
 
-    partial void OnSelectedChanged(AdapterRow? value) => BuildDetails(value);
+    partial void OnSelectedChanged(AdapterRow? value)
+    {
+        BuildDetails(value);
+        _ = RefreshHasPreviousAsync(value);
+    }
+
+    [ObservableProperty]
+    private bool _hasPrevious;
+
+    private async Task RefreshHasPreviousAsync(AdapterRow? row)
+    {
+        HasPrevious = row is not null && await _flow.HasPreviousAsync(row.Adapter.Id);
+    }
+
+    [RelayCommand]
+    private void ChangeDns() => _nav.NavigateTo(NavSection.Providers);
+
+    [RelayCommand]
+    private Task RestoreAutomaticAsync() => _flow.RestoreAutomaticAsync(Selected?.Adapter.Id);
+
+    [RelayCommand]
+    private async Task RestorePreviousAsync()
+    {
+        if (Selected is { } s)
+        {
+            await _flow.RestorePreviousAsync(s.Adapter.Id);
+            await RefreshHasPreviousAsync(s);
+        }
+    }
 
     partial void OnShowAllChanged(bool value) => Rebuild();
 
@@ -128,3 +160,4 @@ public sealed partial class AdaptersViewModel : ObservableObject, IDisposable
         Details.Add(new InfoItem("Known provider", provider?.Name ?? "None recognized", provider is null ? string.Empty : "good"));
     }
 }
+

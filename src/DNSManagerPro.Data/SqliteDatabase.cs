@@ -34,6 +34,21 @@ public sealed class SqliteDatabase(string path, ILogger<SqliteDatabase>? logger 
             LastDetectedAt TEXT NOT NULL
         );
         """,
+        // v2: DNS change history / backups
+        """
+        CREATE TABLE DNSHistory (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            AdapterId TEXT NOT NULL,
+            AdapterName TEXT NOT NULL,
+            PreviousConfiguration TEXT NOT NULL,
+            NewConfiguration TEXT NOT NULL,
+            Operation TEXT NOT NULL,
+            Result TEXT NOT NULL DEFAULT 'Pending',
+            Message TEXT,
+            Timestamp TEXT NOT NULL
+        );
+        CREATE INDEX IX_DNSHistory_Adapter ON DNSHistory (AdapterId, Id);
+        """,
     ];
 
     public static int LatestVersion => Migrations.Length;

@@ -10,6 +10,11 @@ public interface IDialogService
     DnsProvider? EditProvider(DnsProvider? existing);
 
     bool Confirm(string title, string message, string confirmText = "Confirm");
+
+    void Notify(string title, string message);
+
+    /// <summary>Shows the preview/apply dialog. True when a change was applied successfully.</summary>
+    bool ShowApply(ApplyDnsViewModel viewModel);
 }
 
 public sealed class DialogService : IDialogService
@@ -20,16 +25,26 @@ public sealed class DialogService : IDialogService
     {
         var vm = new ProviderEditViewModel(existing);
         var win = new ProviderEditWindow { DataContext = vm, Owner = Owner };
-        vm.CloseRequested += ok =>
-        {
-            win.DialogResult = ok;
-        };
+        vm.CloseRequested += ok => win.DialogResult = ok;
         return win.ShowDialog() == true ? vm.Result : null;
     }
 
     public bool Confirm(string title, string message, string confirmText = "Confirm")
     {
         var win = new ConfirmWindow(title, message, confirmText) { Owner = Owner };
+        return win.ShowDialog() == true;
+    }
+
+    public void Notify(string title, string message) =>
+        new ConfirmWindow(title, message, "OK", showCancel: false) { Owner = Owner }.ShowDialog();
+
+    public bool ShowApply(ApplyDnsViewModel viewModel)
+    {
+        var win = new ApplyDnsWindow { DataContext = viewModel, Owner = Owner };
+        viewModel.CloseRequested += ok =>
+        {
+            win.DialogResult = ok;
+        };
         return win.ShowDialog() == true;
     }
 }

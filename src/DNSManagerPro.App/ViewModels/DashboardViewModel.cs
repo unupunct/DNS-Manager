@@ -18,13 +18,15 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
     private readonly SystemStateService _state;
     private readonly INavigationService _nav;
     private readonly IDnsCacheService _cache;
+    private readonly IApplyFlow _flow;
     private readonly DispatcherTimer _timer;
 
-    public DashboardViewModel(SystemStateService state, INavigationService nav, IDnsCacheService cache)
+    public DashboardViewModel(SystemStateService state, INavigationService nav, IDnsCacheService cache, IApplyFlow flow)
     {
         _state = state;
         _nav = nav;
         _cache = cache;
+        _flow = flow;
         _state.PropertyChanged += OnStateChanged;
         _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(15) };
         _timer.Tick += async (_, _) => await _state.RefreshAsync(true);
@@ -73,7 +75,7 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
     private void ChangeDns() => _nav.NavigateTo(NavSection.Providers);
 
     [RelayCommand]
-    private void RestoreAutomatic() => _nav.NavigateTo(NavSection.Adapters);
+    private Task RestoreAutomaticAsync() => _flow.RestoreAutomaticAsync(_state.ActiveAdapter?.Id);
 
     [RelayCommand]
     private void RunBenchmark() => _nav.NavigateTo(NavSection.Benchmark);
@@ -166,4 +168,5 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
     private static string FormatSpeed(long bps) =>
         bps >= 1_000_000_000 ? $"{bps / 1_000_000_000.0:0.#} Gbps" : $"{bps / 1_000_000.0:0} Mbps";
 }
+
 
